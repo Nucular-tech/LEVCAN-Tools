@@ -111,7 +111,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;WINLEVCAN_EXPORTS;_WINDOWS;_USRDLL;LEVCAN_TRACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\;D:\Projects\LEVCAN\source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;"$(ProjectDir)..\LEVCAN\source";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
@@ -164,26 +164,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\LEVCAN\source\levcan.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_address.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_filedef.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_fileserver.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_internal.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_objects.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_paramclient.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_paramcommon.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_paraminternal.h" />
-    <ClInclude Include="..\..\LEVCAN\source\levcan_paramserver.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_address.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_events.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_filedef.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_fileserver.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_internal.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_objects.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_paramclient.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_paramcommon.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_paraminternal.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan_paramserver.h" />
     <ClInclude Include="levcan_config.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\LEVCAN\source\levcan.c" />
-    <ClCompile Include="..\..\LEVCAN\source\levcan_address.c" />
-    <ClCompile Include="..\..\LEVCAN\source\levcan_fileserver.c" />
-    <ClCompile Include="..\..\LEVCAN\source\levcan_paramclient.c" />
-    <ClCompile Include="..\..\LEVCAN\source\levcan_paramcommon.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_address.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_events.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_fileserver.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_paramclient.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_paramcommon.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan_paramserver.c" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="levcan_lib.c" />
+    <ClCompile Include="..\LEVCAN\source\levcan.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_address.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_events.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_fileserver.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_paramclient.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_paramcommon.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LEVCAN\source\levcan_paramserver.c">
+      <Filter>levcan source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="levcan_config.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="..\LEVCAN\source\levcan.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_address.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_events.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_filedef.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_fileserver.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_internal.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_objects.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_paramclient.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_paramcommon.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_paraminternal.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\LEVCAN\source\levcan_paramserver.h">
+      <Filter>levcan source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="levcan source">
+      <UniqueIdentifier>{68ea9719-5066-4765-968a-017c92f3e3a8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
