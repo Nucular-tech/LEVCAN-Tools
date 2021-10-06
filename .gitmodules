@@ -1,0 +1,4 @@
+[submodule "LEVCAN"]
+	path = LEVCAN
+	url = https://github.com/VasiliSker/LEVCAN.git
+	branch = dev
