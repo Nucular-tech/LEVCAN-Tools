@@ -47,7 +47,7 @@ namespace LEVCAN
 
             if (enc == null)
             {
-                var sname = node.GetNodeSName(fromID);
+                var sname = node.GetNodeShortName(fromID);
                 if (sname.NodeID == (ushort)LC_Address.Broadcast)
                     remoteEncoding = node.ShortName.CodePage;//not found, use own codepage
                 else

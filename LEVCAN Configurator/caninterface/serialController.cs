@@ -13,10 +13,10 @@ using System.Collections.Concurrent;
 
 namespace LEVCANsharpTest
 {
-    class SerialNode
+    class SerialNodeController : Icanbus
     {
         readonly int cdc_packsz = Marshal.SizeOf(typeof(CANdata));
-        public int tx = 0, rx = 0, errb = 0;
+        public int txcounter = 0, rxcounter = 0, errors = 0;
         List<byte> buffer = new List<byte>();
         byte[] portbuff;
         bool portTxFull = false;
@@ -30,6 +30,49 @@ namespace LEVCANsharpTest
         //SerialPort port;
         BlockingCollection<CANdata> sendQueue = new BlockingCollection<CANdata>();
         LC_Node _node;
+        Thread sendThread;
+        Thread receiveThread;
+
+        public int TXcounter { get { return txcounter; } set { txcounter = value; } }
+        public int RXcounter { get { return rxcounter; } set { rxcounter = value; } }
+        public int Errors { get { return errors; } set { errors = value; } }
+        public TimeSpan MaxRequestDelay { get { return maxel; } set { maxel = value; } }
+
+        public SerialNodeController(LC_Node node)
+        {
+            _node = node;
+            portbuff = new byte[cdc_packsz];
+            
+        }
+
+        public void Open()
+        {
+            DeviceList.Local.Changed += DeviceListChanged;
+            Task.Run(() => { DeviceList.Local.RaiseChanged(); });
+
+            LC_Interface.SetFilterCallback(FilterCallback);
+            LC_Interface.SetSendCallback(SendCallback);
+            LC_Interface.InitQHandlers();
+
+            sendThread = new Thread(SendQueueToSerial);
+            sendThread.IsBackground = true; //testing
+            sendThread.Start();
+            sendThread.Name = "Serial Node Send";
+
+            receiveThread = new Thread(ReceiveFromSerial);
+            receiveThread.IsBackground = true; //testing
+            receiveThread.Start();
+            receiveThread.Name = "Serial Node Receive";
+        }
+
+        public void Close()
+        {
+            receiveThread.Abort();
+            sendThread.Abort();
+            LC_Interface.SetFilterCallback(null);
+            LC_Interface.SetSendCallback(null);
+            DeviceList.Local.Changed -= DeviceListChanged;
+        }
 
         public float AvgElapsed
         {
@@ -45,27 +88,6 @@ namespace LEVCANsharpTest
             }
         }
 
-        public SerialNode(LC_Node node)
-        {
-            _node = node;
-            portbuff = new byte[cdc_packsz];
-            DeviceList.Local.Changed += DeviceListChanged;
-            Task.Run(() => { DeviceList.Local.RaiseChanged(); });
-
-            LC_Interface.SetFilterCallback(FilterCallback);
-            LC_Interface.SetSendCallback(SendCallback);
-            LC_Interface.InitQHandlers();
-
-            var send = new Thread(SendQueueToSerial);
-            send.IsBackground = true; //testing
-            send.Start();
-            send.Name = "Serial Node Send";
-
-            var receive = new Thread(ReceiveFromSerial);
-            receive.IsBackground = true; //testing
-            receive.Start();
-            receive.Name = "Serial Node Receive";
-        }
 
         void SendQueueToSerial()
         {
@@ -117,7 +139,7 @@ namespace LEVCANsharpTest
                         //Found nucular device
                         port = stream;
                         port.Closed += Port_Closed;
-                       // port.ReadTimeout = Timeout.Infinite;
+                        // port.ReadTimeout = Timeout.Infinite;
                         //port.BeginRead(portbuff, 0, cdc_packsz, receivedCallback, null);
 
                         LC_Interface.InitFilters();
@@ -190,7 +212,7 @@ namespace LEVCANsharpTest
                             }
                             //data ready! pack ID
                             LC_Interface.lib_ReceiveHandler(_node.DescriptorPtr, candata.ID, candata.Data, candata.Length);
-                            rx++;
+                            rxcounter++;
                         }
                         else if (buffer[2] == 2)
                         {
@@ -211,7 +233,7 @@ namespace LEVCANsharpTest
                     }
                     else
                     {
-                        errb++;
+                        errors++;
                         buffer.RemoveAt(0); //del one byte
                     }
                 }
@@ -229,6 +251,7 @@ namespace LEVCANsharpTest
                 }
                 catch { }
                 port = null;
+                OnDisconnected.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -249,7 +272,7 @@ namespace LEVCANsharpTest
             {
                 swGlb.Restart();
             }
-            tx++;
+            txcounter++;
             try
             {
                 sendQueue.TryAdd(senddata);
@@ -269,6 +292,9 @@ namespace LEVCANsharpTest
         }
 
         Mutex once = new Mutex(false);
+
+        public event EventHandler OnDisconnected;
+
         public void ResponceTest()
         {
             while (true)
@@ -326,46 +352,5 @@ namespace LEVCANsharpTest
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
             public uint[] Data;
         }
-    }
-
-    class StructHelper
-    {
-        public static T BytesToStructure<T>(byte[] bytes, int offset)
-        {
-
-            int size = Marshal.SizeOf(typeof(T));
-            if (bytes.Length - offset < size)
-                throw new Exception("Invalid parameter");
-
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            try
-            {
-                Marshal.Copy(bytes, offset, ptr, size);
-                return (T)Marshal.PtrToStructure(ptr, typeof(T));
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
-        }
-
-        public static T BytesToStructure<T>(byte[] bytes)
-        {
-            return BytesToStructure<T>(bytes, 0);
-        }
-
-        public static byte[] StructToBytes(object structdata)
-        {
-
-            int size = Marshal.SizeOf(structdata);
-            byte[] arr = new byte[size];
-
-            IntPtr ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(structdata, ptr, true);
-            Marshal.Copy(ptr, arr, 0, size);
-            Marshal.FreeHGlobal(ptr);
-            return arr;
-        }
-
     }
 }

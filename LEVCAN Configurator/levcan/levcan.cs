@@ -110,13 +110,16 @@ namespace LEVCAN
         //because 
         public static void InitQHandlers()
         {
-            qlist = new List<BCollectionSized>();
-            qcreate = QueueCreate;
-            qdelete = QueueDelete;
-            qreceive = QueueReceive;
-            qsendback = QueueSendBack;
-            _setQueueCallbacks(qcreate, qdelete, qreceive, qsendback);
-            queuesSet = true;
+            if (qlist == null)
+            {
+                qlist = new List<BCollectionSized>();
+                qcreate = QueueCreate;
+                qdelete = QueueDelete;
+                qreceive = QueueReceive;
+                qsendback = QueueSendBack;
+                _setQueueCallbacks(qcreate, qdelete, qreceive, qsendback);
+                queuesSet = true;
+            }
         }
 
         private static int QueueSendBack(lcQueue_t* queue, byte* buffer, int timeToWait)
@@ -235,6 +238,12 @@ namespace LEVCAN
         [DllImport("LEVCANlibx64", EntryPoint = "LC_SendRequestSpec", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_sendRequestSpec(IntPtr node, ushort target, ushort index, byte size, byte TCP);
 
+        [DllImport("LEVCANlibx64", EntryPoint = "LC_SendMessage", CharSet = CharSet.Ansi)]
+        private static extern LC_Return lib_sendMessage(IntPtr node, ref lc_objectRecord obj, ushort index);
+
+        [DllImport("LEVCANlibx64", EntryPoint = "LC_GetActiveNodes", CharSet = CharSet.Ansi)]
+        private static extern LC_NodeShortName lib_getActiveNodes(IntPtr node, ref ushort position);
+
         [DllImport("LEVCANlibx64", EntryPoint = "LC_GetNode", CharSet = CharSet.Ansi)]
         private static extern LC_NodeShortName lib_getNode(ushort target);
 
@@ -245,7 +254,7 @@ namespace LEVCAN
         public IntPtr DescriptorPtr { get { return (IntPtr)descriptor; } }
         public LC_NodeShortName ShortName { get { return descriptor->ShortName; } }
 
-        lc_object_intenal* objects_node;
+        lc_object* objects_node;
         ILC_Object[] objects;
 
         public LC_Node(byte nodeID)
@@ -309,7 +318,7 @@ namespace LEVCAN
                 var objToFree = objects_node;
                 //alloc new obj
                 ushort size = (ushort)value.Length;
-                objects_node = (lc_object_intenal*)Marshal.AllocHGlobal(size * Marshal.SizeOf(typeof(lc_object_intenal)));
+                objects_node = (lc_object*)Marshal.AllocHGlobal(size * Marshal.SizeOf(typeof(lc_object)));
                 //copy data
                 for (int i = 0; i < size; i++)
                 {
@@ -324,7 +333,7 @@ namespace LEVCAN
                 }
                 //assign obj list
                 descriptor->ObjectsSize = 0;
-                descriptor->Objects = objects_node;
+                descriptor->objects = objects_node;
                 descriptor->ObjectsSize = size;
 
                 //clean up old
@@ -344,16 +353,46 @@ namespace LEVCAN
             if (target > (ushort)LC_Address.Broadcast)
                 throw new ArgumentOutOfRangeException("Target ID out of range!");
 
-            return SendRequest((byte)target, (ushort)index);
+            return SendRequest((byte)target, (ushort)index, false);
         }
-        public LC_Return SendRequest(byte target, ushort index)
+        public LC_Return SendRequest(byte target, ushort index, bool TCP)
         {
             if (target > (byte)LC_Address.Broadcast)
                 throw new ArgumentOutOfRangeException("Target ID out of range!");
 
-            return lib_sendRequestSpec(DescriptorPtr, target, index, 0, 0);
+            return lib_sendRequestSpec(DescriptorPtr, target, index, 0, (byte)(TCP ? 1 : 0));
         }
-        public LC_NodeShortName GetNodeSName(ushort nodeID)
+
+        public LC_Return SendData(byte[] bytes, byte target, ushort index, bool TCP = false)
+        {
+
+            lc_objectRecord message = new lc_objectRecord();
+            message.NodeID = target;
+            message.Size = bytes.Length;
+            message.Attributes = (ushort)lc_objectAttributes_internal.Cleanup;
+            if (TCP)
+                message.Attributes |= (ushort)lc_objectAttributes_internal.TCP;
+
+            message.Address = (void*)Marshal.AllocHGlobal(bytes.Length);
+            Marshal.Copy(bytes, 0, (IntPtr)message.Address, bytes.Length);
+            return lib_sendMessage(DescriptorPtr, ref message, (ushort)index);
+        }
+
+        public LC_NodeShortName[] GetActiveNodes()
+        {
+            List<LC_NodeShortName> nodes = new List<LC_NodeShortName>();
+            ushort position = 0;
+            int i = 0;
+            while (position < 120) // LEVCAN_MAX_TABLE_NODES
+            {
+                LC_NodeShortName sn = lib_getActiveNodes(DescriptorPtr, ref position);
+                if (position < 120)
+                    nodes.Add(sn);
+            }
+            return nodes.ToArray();
+        }
+
+        public LC_NodeShortName GetNodeShortName(ushort nodeID)
         {
             return lib_getNode(nodeID);
         }

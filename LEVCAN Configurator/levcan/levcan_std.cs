@@ -54,6 +54,7 @@ namespace LEVCAN
         MaxMessageID = 1023
     };
 
+
     public enum LC_NodeState
     {
         Disabled, NetworkDiscovery, WaitingClaim, Online
@@ -261,6 +262,12 @@ namespace LEVCAN
             set { buffer[_Request] = value; }
         }
 
+        public uint ToUint
+        {
+            get { return (uint)buffer.Data; }
+        }
+
+
         public override string ToString()
         {
             return "SRC:" + this.Source.ToString() + " DST:" + Target.ToString() + " ID:" + MsgID.ToString() + (Request == 1 ? " R" : " d") + (Parity == 1 ? " P" : " _") + (RTS_CTS == 1 ? " RC" : " __");
@@ -358,7 +365,7 @@ namespace LEVCAN
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-    internal unsafe struct lc_object_intenal
+    internal unsafe struct lc_object
     {
         public ushort Index; //message id
         public ushort Attributes; /*LC_ObjectAttributes_t*/
@@ -366,13 +373,13 @@ namespace LEVCAN
         public void* Address; //pointer to variable or LC_FunctionCall_t or LC_ObjectRecord_t[]. if LC_ObjectAttributes_t.Pointer=1, this is pointer to pointer
     };
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-    internal unsafe struct lc_objectRecord_intenal
+    [StructLayout(LayoutKind.Sequential, Pack = 2, CharSet = CharSet.Ansi)]
+    internal unsafe struct lc_objectRecord
     {
         public byte NodeID; //message id
-        public ushort/*LC_ObjectAttributes_t*/ Attributes;
+        public ushort Attributes; /*LC_ObjectAttributes_t*/
         public int Size; //in bytes, can be negative (useful for strings), i.e. -1 = maximum length 1, -10 = maximum length 10. Request size 0 returns any first object
-        void* address; //pointer to variable or LC_FunctionCall_t or LC_ObjectRecord_t[]. if LC_ObjectAttributes_t.Pointer=1, this is pointer to pointer
+        public void* Address; //pointer to variable or LC_FunctionCall_t or LC_ObjectRecord_t[]. if LC_ObjectAttributes_t.Pointer=1, this is pointer to pointer
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4, CharSet = CharSet.Ansi)]
@@ -382,8 +389,8 @@ namespace LEVCAN
         private byte* _NodeName;
         private byte* _DeviceName;
         private byte* _VendorName;
-        internal lc_object_intenal* Objects;
-        internal void* Directories;
+        internal lc_object* objects;
+        internal void* directories;
         public LC_NodeShortName ShortName;
         //[MarshalAs(UnmanagedType.LPArray, SizeConst = 4)]
         public uint Serial1;

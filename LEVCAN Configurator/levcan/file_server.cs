@@ -116,12 +116,26 @@ namespace LEVCAN
         int fileIndex = 1; //intptr=0 - error
         string savePath;
 
+        public string SavePath
+        {
+            get { return savePath; }
+            set
+            {
+                if (!Directory.Exists(value))
+                {
+                    Directory.CreateDirectory(value);
+                }
+                //todo close opened files? or keep them alive sice there is no conflict?
+                savePath = value;
+            }
+        }
+
         public LC_FileServer(LC_Node node)
         {
             initCallbacks();
             lib_FileServerInit(node.DescriptorPtr);
             _node = node;
-            savePath = Directory.GetCurrentDirectory();
+            SavePath = Path.Combine(Directory.GetCurrentDirectory(), "files");
 
             mutex = new SemaphoreSlim(0);
             var updates = new Thread(FileServerThread);
@@ -180,34 +194,34 @@ namespace LEVCAN
                 fileIndex++;
                 files.Add(fileObject->ToInt32(), fs);
             }
-            catch (FileNotFoundException fnf)
+            catch (FileNotFoundException)
             {
                 res = LC_FileResult.NoFile;
             }
-            catch (System.Security.SecurityException se)
+            catch (System.Security.SecurityException)
             {
                 res = LC_FileResult.Denied;
             }
-            catch (DirectoryNotFoundException dnf)
+            catch (DirectoryNotFoundException)
             {
                 res = LC_FileResult.NoPath;
             }
-            catch (UnauthorizedAccessException ae)
+            catch (UnauthorizedAccessException)
             {
                 res = LC_FileResult.Denied;
             }
-            catch (PathTooLongException ptle)
+            catch (PathTooLongException)
             {
                 res = LC_FileResult.InvalidName;
             }
-            catch (IOException ioexep)
+            catch (IOException)
             {
                 if (ToFileMode(mode) == FileMode.CreateNew)
                     res = LC_FileResult.Exist;
                 else
                     res = LC_FileResult.IntErr;
             }
-            catch (NotSupportedException nse)
+            catch (NotSupportedException)
             {
                 res = LC_FileResult.IntErr;
             }

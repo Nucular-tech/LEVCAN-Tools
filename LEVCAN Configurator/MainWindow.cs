@@ -20,7 +20,7 @@ namespace LEVCANsharpTest
 {
     public partial class MainWindow : Form
     {
-        SerialNode sport;
+        Icanbus icanPort;
         LC_Node node;
         LC_ParamClient pclient;
         ILC_Object[] objects;
@@ -54,7 +54,7 @@ namespace LEVCANsharpTest
             //hardware
             //start node
             node = new LEVCAN.LC_Node(65);
-            sport = new SerialNode(node);
+            comboBox1_SelectedIndexChanged(this, EventArgs.Empty);
             LC_Interface.SetAddressCallback(addressChanges);
             node.Objects = objects;
             //init client for params
@@ -153,7 +153,6 @@ namespace LEVCANsharpTest
 
 
         int delay = 0;
-        TimeSpan totalspan = TimeSpan.Zero;
         private async void timer1_Tick(object sender, EventArgs e)
         {
             delay += timer1.Interval;
@@ -168,17 +167,16 @@ namespace LEVCANsharpTest
                 //  sport.ResponceTest();
                 // if (names == 0)
                 //     node.SendRequest((byte)LC_Address.Broadcast, (ushort)LC_SystemMessage.NodeName);
-                label4.Text = "Names: " + sport.elcntr.ToString();//names.ToString();
+                //label4.Text = "Names: " + icanPort.elcntr.ToString();//names.ToString();
                 //label2.Text = (totalspan.TotalMilliseconds/ names).ToString();
-                errorsLabel.Text = "Errors: " + sport.errb.ToString();
-                totalspan = TimeSpan.Zero;
-                txrxLabel.Text = "TX/RX: " + (sport.tx + sport.rx).ToString();
-                sport.rx = 0;
                 names = 0;
-                sport.tx = 0;
-                sport.errb = 0;
-                label2.Text = sport.AvgElapsed.ToString();//sport.elapsed.TotalMilliseconds.ToString();
-                label5.Text = "Max:" + sport.maxel.TotalMilliseconds.ToString();
+                errorsLabel.Text = "Errors: " + icanPort.Errors.ToString();
+                txrxLabel.Text = "TX/RX: " + (icanPort.TXcounter + icanPort.RXcounter).ToString();
+                icanPort.RXcounter = 0;
+                icanPort.TXcounter = 0;
+                icanPort.Errors = 0;
+                //label2.Text = icanPort.AvgElapsed.ToString();//sport.elapsed.TotalMilliseconds.ToString();
+                label5.Text = "Max:" + icanPort.MaxRequestDelay.TotalMilliseconds.ToString();
 
             }
             //   node.SendRequest(19, LC_SystemMessage.NodeName);
@@ -192,6 +190,7 @@ namespace LEVCANsharpTest
             }
 
         }
+
 
         private async void listBox1_SelectedValueChanged(object sender, EventArgs e)
         {
@@ -251,6 +250,7 @@ namespace LEVCANsharpTest
 
         void FlowAddDirectory(LCPC_Directory dir)
         {
+            flowSettingsPanel.Controls.Clear();
             List<Control> controlArray = new List<Control>();
             foreach (var entr in dir.Entries)
             {
@@ -294,12 +294,6 @@ namespace LEVCANsharpTest
             // SuspendUpdate.Resume(flowLayoutPanel1);
         }
 
-
-        private void label5_Click(object sender, EventArgs e)
-        {
-            sport.maxel = TimeSpan.Zero;
-        }
-
         private void buttonBack_Click(object sender, EventArgs e)
         {
             if (pathSelect.Count > 0)
@@ -334,6 +328,59 @@ namespace LEVCANsharpTest
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)
         {
             MainWindow_ResizeEnd(sender, null);
+        }
+
+        int oldIndex = -1;
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (oldIndex == comboBox1.SelectedIndex || comboBox1.SelectedIndex < 0)
+                return;
+
+            //new connection source selected;
+            if (icanPort != null)
+                icanPort.Close();
+            oldIndex = comboBox1.SelectedIndex;
+            switch (comboBox1.SelectedIndex)
+            {
+                case 0:
+                    icanPort = new SerialNodeController(node);
+                    break;
+                case 1:
+                    //icanPort = new socketcand(node); //works as shit
+                    break;
+                case 2:
+                    icanPort = new Pcanusb(node);
+                    break;
+            }
+            icanPort.Open();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            folderBrowserDialogServer.SelectedPath = nfs.SavePath;
+            var resl = folderBrowserDialogServer.ShowDialog();
+            if (resl == DialogResult.OK)
+            {
+                try
+                {
+                    nfs.SavePath = folderBrowserDialogServer.SelectedPath;
+                    tbFserverPath.Text = nfs.SavePath;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Try different path", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            var actnodes = node.GetActiveNodes();
+            foreach (var actnode in actnodes)
+            {
+                node.SendData(new byte[] { 0xDA, 0xCE, 0xCA, 0x02 }, (byte)actnode.NodeID, (ushort)LC_SystemMessage.SWUpdate);
+            }
         }
 
         /* private void listDirBox_SelectedValueChanged(object sender, EventArgs e)

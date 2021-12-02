@@ -181,7 +181,7 @@ namespace LEVCAN
             }
             else
             {
-                var sname = owner.GetNodeSName(header.Source);
+                var sname = owner.GetNodeShortName(header.Source);
                 Encoding page;
                 if (sname.NodeID == (ushort)LC_Address.Broadcast)
                     page = descriptor->ShortName.CodePage;//not found, use own codepage
