@@ -23,7 +23,7 @@ namespace LEVCANsharpTest
         Icanbus icanPort;
         LC_Node node;
         LC_ParamClient pclient;
-        ILC_Object[] objects;
+        LC_IObject[] objects;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 128)]
         byte[] name;
         Dictionary<LCRemoteNode, LC_ParamClient> nodeParams = new Dictionary<LCRemoteNode, LC_ParamClient>();
@@ -43,7 +43,7 @@ namespace LEVCANsharpTest
             listBox_devices.DataSource = listOfRemotes;
 
             timer1.Start();
-            objects = new ILC_Object[2];
+            objects = new LC_IObject[2];
             name = new byte[128];
             //objects[0] = new LC_Object((ushort)LC_SystemMessage.NodeName, new LC_Obj_ThrottleV_t(), LC_ObjectAttributes.Writable);
             objects[0] = new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_ThrottleV, data_in, LC_ObjectAttributes.Writable, typeof(LC_Obj_ThrottleV_t));
@@ -58,7 +58,7 @@ namespace LEVCANsharpTest
             LC_Interface.SetAddressCallback(addressChanges);
             node.Objects = objects;
             //init client for params
-            pclient = new LC_ParamClient(node, 19);
+            //pclient = new LC_ParamClient(node, 19);
             nfs = new LC_FileServer(node);
             node.StartNode();
         }
@@ -98,13 +98,14 @@ namespace LEVCANsharpTest
                         break;
 
                     case LC_AddressState.Deleted:
-                        if (index < listOfRemotes.Count)
+                        for (int i = 0; i < listOfRemotes.Count; i++)
                         {
-                            listOfRemotes.RemoveAt(index);
-                            //listOfRemotes[index].ShortName.NodeID = (ushort)LC_Address.Broadcast;
+                            if (listOfRemotes[i].ShortName.NodeID == shortname.NodeID)
+                                listOfRemotes.RemoveAt(index);
                         }
                         break;
                 }
+                Debug.Print(state.ToString() + " node " + shortname.NodeID);
             }
 
             listbox1_Refrash();
@@ -191,15 +192,11 @@ namespace LEVCANsharpTest
 
         }
 
-
         private async void listBox1_SelectedValueChanged(object sender, EventArgs e)
         {
+            settingsListReset();
             if (listBox_devices.SelectedIndex == -1)
             {
-                flowSettingsPanel.Controls.Clear();
-                flowSettingsPanel.Enabled = false;
-                pathSelect.Clear();
-                labelSettings.Text = "Settings";
                 activeCl = null;
                 return;
             }
@@ -218,19 +215,22 @@ namespace LEVCANsharpTest
                     nodeParams.Add(selected, client); //save bind                    
                 }
 
-                if (activeCl != client)
+                //if (activeCl != client)
                 {
                     activeCl = client;
                     await client.UpdateDirectoriesAsync();
                     FlowAddDirectory(client.Directories[0]);
-                    pathSelect.Clear();
                     labelSettings.Text = "Settings";
                 }
             }
-            else
-            {
-                flowSettingsPanel.Enabled = false;
-            }
+        }
+
+        void settingsListReset()
+        {
+            flowSettingsPanel.Controls.Clear();
+            flowSettingsPanel.Enabled = false;
+            pathSelect.Clear();
+            labelSettings.Text = "Settings";
         }
 
         private void folderChange(object sender, ushort newDirIndex)
@@ -418,6 +418,28 @@ namespace LEVCANsharpTest
             window.DefWndProc(ref msgResumeUpdate);
 
             control.Invalidate();
+        }
+    }
+
+    class LCRemoteNode
+    {
+        public Encoding Encoding;
+        public LC_NodeShortName ShortName;
+        public string Name;
+        public ushort Index;
+
+        public LCRemoteNode(LC_NodeShortName sname)
+        {
+            ShortName = sname;
+            Encoding = sname.CodePage;
+        }
+
+        override public string ToString()
+        {
+            if (ShortName.NodeID > (ushort)LC_Address.Null)
+                return "Invalid node";
+            else
+                return ShortName.NodeID.ToString() + ":" + Name;
         }
     }
 }

@@ -86,7 +86,7 @@
     <Compile Include="FlowNoScroll.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="icanbus.cs" />
+    <Compile Include="caninterface\icanbus.cs" />
     <Compile Include="levcan\file_server.cs" />
     <Compile Include="levcan\object.cs" />
     <Compile Include="levcan\param_client.cs" />

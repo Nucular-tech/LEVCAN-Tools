@@ -44,16 +44,15 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.flowSettingsPanel = new LEVCANsharpTest.FlowNoScroll();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label3 = new System.Windows.Forms.Label();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.tbFserverPath = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.label3 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.folderBrowserDialogServer = new System.Windows.Forms.FolderBrowserDialog();
-            this.button2 = new System.Windows.Forms.Button();
+            this.flowSettingsPanel = new LEVCANsharpTest.FlowNoScroll();
             this.statusStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -63,7 +62,6 @@
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tabPage2.SuspendLayout();
-            this.tabPage3.SuspendLayout();
             this.SuspendLayout();
             // 
             // listBox_devices
@@ -160,7 +158,6 @@
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -215,6 +212,82 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(414, 334);
             this.tableLayoutPanel1.TabIndex = 14;
             // 
+            // tabPage2
+            // 
+            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage2.Controls.Add(this.label3);
+            this.tabPage2.Controls.Add(this.comboBox1);
+            this.tabPage2.Controls.Add(this.button2);
+            this.tabPage2.Controls.Add(this.button1);
+            this.tabPage2.Controls.Add(this.tbFserverPath);
+            this.tabPage2.Controls.Add(this.label6);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(611, 340);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Settings";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(8, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(62, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "Connect to:";
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "Nucular controller",
+            "Nucular USB2CAN",
+            "PCAN-USB"});
+            this.comboBox1.Location = new System.Drawing.Point(76, 6);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 21);
+            this.comboBox1.TabIndex = 4;
+            this.comboBox1.Text = "Nucular controller";
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(8, 65);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(146, 23);
+            this.button2.TabIndex = 3;
+            this.button2.Text = "Force update on all nodes";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(426, 31);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 2;
+            this.button1.Text = "Select";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // tbFserverPath
+            // 
+            this.tbFserverPath.Location = new System.Drawing.Point(96, 33);
+            this.tbFserverPath.Name = "tbFserverPath";
+            this.tbFserverPath.Size = new System.Drawing.Size(324, 20);
+            this.tbFserverPath.TabIndex = 1;
+            this.tbFserverPath.Text = "files";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(8, 36);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(82, 13);
+            this.label6.TabIndex = 0;
+            this.label6.Text = "File server path:";
+            // 
             // flowSettingsPanel
             // 
             this.flowSettingsPanel.AutoScroll = true;
@@ -228,92 +301,6 @@
             this.flowSettingsPanel.Size = new System.Drawing.Size(408, 287);
             this.flowSettingsPanel.TabIndex = 14;
             this.flowSettingsPanel.WrapContents = false;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPage2.Controls.Add(this.button2);
-            this.tabPage2.Controls.Add(this.button1);
-            this.tabPage2.Controls.Add(this.tbFserverPath);
-            this.tabPage2.Controls.Add(this.label6);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(611, 340);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "File server";
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(426, 4);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 2;
-            this.button1.Text = "Select";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // tbFserverPath
-            // 
-            this.tbFserverPath.Location = new System.Drawing.Point(96, 6);
-            this.tbFserverPath.Name = "tbFserverPath";
-            this.tbFserverPath.Size = new System.Drawing.Size(324, 20);
-            this.tbFserverPath.TabIndex = 1;
-            this.tbFserverPath.Text = "files";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(8, 9);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(82, 13);
-            this.label6.TabIndex = 0;
-            this.label6.Text = "File server path:";
-            // 
-            // tabPage3
-            // 
-            this.tabPage3.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPage3.Controls.Add(this.label3);
-            this.tabPage3.Controls.Add(this.comboBox1);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(611, 340);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Connection settings";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(9, 7);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(62, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Connect to:";
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "Nucular controller",
-            "Nucular USB2CAN",
-            "PCAN-USB"});
-            this.comboBox1.Location = new System.Drawing.Point(77, 4);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 21);
-            this.comboBox1.TabIndex = 0;
-            this.comboBox1.Text = "Nucular controller";
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(8, 38);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(146, 23);
-            this.button2.TabIndex = 3;
-            this.button2.Text = "Force update on all nodes";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // MainWindow
             // 
@@ -339,8 +326,6 @@
             this.tableLayoutPanel1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
-            this.tabPage3.ResumeLayout(false);
-            this.tabPage3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -363,15 +348,14 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ComboBox comboBox1;
         private FlowNoScroll flowSettingsPanel;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox tbFserverPath;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogServer;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 

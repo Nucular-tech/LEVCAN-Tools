@@ -255,7 +255,7 @@ namespace LEVCAN
         public LC_NodeShortName ShortName { get { return descriptor->ShortName; } }
 
         lc_object* objects_node;
-        ILC_Object[] objects;
+        LC_IObject[] objects;
 
         public LC_Node(byte nodeID)
         {
@@ -310,7 +310,7 @@ namespace LEVCAN
             }
         }
 
-        internal ILC_Object[] Objects
+        internal LC_IObject[] Objects
         {
             set
             {
@@ -410,26 +410,5 @@ namespace LEVCAN
     public interface IObjectHandler
     {
         object Value { get; set; }
-    }
-
-    class LCRemoteNode
-    {
-        public Encoding Encoding;
-        public LC_NodeShortName ShortName;
-        public string Name;
-
-        public LCRemoteNode(LC_NodeShortName sname)
-        {
-            ShortName = sname;
-            Encoding = sname.CodePage;
-        }
-
-        override public string ToString()
-        {
-            if (ShortName.NodeID > (ushort)LC_Address.Null)
-                return "Invalid node";
-            else
-                return ShortName.NodeID.ToString() + ":" + Name;
-        }
     }
 }

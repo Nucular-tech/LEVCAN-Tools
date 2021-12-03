@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LEVCAN lib", "LEVCAN Lib\LE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Configurator", "LEVCAN Configurator\LEVCAN Configurator.csproj", "{085F6896-82C8-4781-A9AE-600E9C3F3E60}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nucular Configurator", "Nucular Configurator\Nucular Configurator.csproj", "{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,18 @@ Global
 		{085F6896-82C8-4781-A9AE-600E9C3F3E60}.Release|x64.Build.0 = Release|Any CPU
 		{085F6896-82C8-4781-A9AE-600E9C3F3E60}.Release|x86.ActiveCfg = Release|Any CPU
 		{085F6896-82C8-4781-A9AE-600E9C3F3E60}.Release|x86.Build.0 = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|x64.Build.0 = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Debug|x86.Build.0 = Debug|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|x64.ActiveCfg = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|x64.Build.0 = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|x86.ActiveCfg = Release|Any CPU
+		{97BB2BA4-E7DC-4477-927D-9DEFC88D159C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

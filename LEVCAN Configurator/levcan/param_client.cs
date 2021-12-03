@@ -73,7 +73,7 @@ namespace LEVCAN
             lcpc_Directory_t dir_struct = new lcpc_Directory_t(); //buffer
                                                                   //scan all dirs
             ushort index = 0;
-            while (state != LC_Return.OutOfRange)
+            while (state != LC_Return.OutOfRange && state != LC_Return.Timeout)
             {
                 sync.WaitOne();
                 state = lib_RequestDirectory(myNode.DescriptorPtr, remoteNode, index, ref dir_struct);
@@ -119,7 +119,7 @@ namespace LEVCAN
                 {
                     var val = await Task.Factory.StartNew<LCPC_Entry>(() =>
                     {
-                        return UpdateEntry((ushort)dir.Index, entryIndex, out ret);
+                        return GetEntry((ushort)dir.Index, entryIndex, out ret);
                     });
 
                     if (val != null)
@@ -135,7 +135,7 @@ namespace LEVCAN
             }
         }
 
-        public LCPC_Entry UpdateEntry(ushort dirIndex, ushort entryIndex, out LC_Return result)
+        public LCPC_Entry GetEntry(ushort dirIndex, ushort entryIndex, out LC_Return result)
         {
             lcpc_Entry_t entry = new lcpc_Entry_t();
 

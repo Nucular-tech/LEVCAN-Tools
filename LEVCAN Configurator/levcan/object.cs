@@ -38,7 +38,7 @@ namespace LEVCAN
     }
 
 
-    public class LC_Object : ILC_Object
+    public class LC_Object : LC_IObject
     {
         public ushort Index { get; }
         lc_objectAttributes_internal attributes;
@@ -71,7 +71,7 @@ namespace LEVCAN
 
     }
 
-    public unsafe class LC_ObjectFunction : ILC_Object
+    public unsafe class LC_ObjectFunction : LC_IObject
     {
         public delegate void Callback(LC_Header header, object data);
         private delegate void lc_callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size);
@@ -148,7 +148,7 @@ namespace LEVCAN
         }
     }
 
-    public unsafe class LC_ObjectString : ILC_Object
+    public unsafe class LC_ObjectString : LC_IObject
     {
         public delegate void Callback(LC_Header header, string text);
         private delegate void lc_callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size);
@@ -227,7 +227,7 @@ namespace LEVCAN
         public bool Record { get { return true; } }
     }*/
 
-    internal interface ILC_Object
+    internal interface LC_IObject
     {
         ushort Index { get; }
         ushort Attributes { get; }
