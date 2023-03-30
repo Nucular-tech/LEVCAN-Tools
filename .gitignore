@@ -62,3 +62,4 @@ dkms.conf
 /x64/*
 /LEVCAN on NetCore/*
 /LEVCAN Logger/bin/*
+/LEVCAN Lib/Debug/*
