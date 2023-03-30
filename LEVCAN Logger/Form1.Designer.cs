@@ -66,6 +66,7 @@
             this.lbxInfo = new System.Windows.Forms.ListBox();
             this.btnInfoClear = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.chbLevcanID = new System.Windows.Forms.CheckBox();
             this.tbEncoding = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -180,11 +181,10 @@
             this.rdbFilterClose = new System.Windows.Forms.RadioButton();
             this.btnFilterApply = new System.Windows.Forms.Button();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.chbLevcanID = new System.Windows.Forms.CheckBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
-            this.txtbFilters = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
+            this.txtbFilters = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudDeviceIdOrDelay)).BeginInit();
@@ -740,6 +740,18 @@
             this.groupBox5.TabIndex = 48;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = " Messages Reading ";
+            // 
+            // chbLevcanID
+            // 
+            this.chbLevcanID.AutoSize = true;
+            this.chbLevcanID.Checked = true;
+            this.chbLevcanID.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chbLevcanID.Location = new System.Drawing.Point(267, 17);
+            this.chbLevcanID.Name = "chbLevcanID";
+            this.chbLevcanID.Size = new System.Drawing.Size(112, 17);
+            this.chbLevcanID.TabIndex = 79;
+            this.chbLevcanID.Text = "Parse LEVCAN ID";
+            this.chbLevcanID.UseVisualStyleBackColor = true;
             // 
             // tbEncoding
             // 
@@ -2215,18 +2227,6 @@
             this.tabPage1.Text = "Main";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // chbLevcanID
-            // 
-            this.chbLevcanID.AutoSize = true;
-            this.chbLevcanID.Checked = true;
-            this.chbLevcanID.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chbLevcanID.Location = new System.Drawing.Point(267, 17);
-            this.chbLevcanID.Name = "chbLevcanID";
-            this.chbLevcanID.Size = new System.Drawing.Size(112, 17);
-            this.chbLevcanID.TabIndex = 79;
-            this.chbLevcanID.Text = "Parse LEVCAN ID";
-            this.chbLevcanID.UseVisualStyleBackColor = true;
-            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.groupBox7);
@@ -2251,6 +2251,15 @@
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "Filters";
             // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(7, 20);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(265, 13);
+            this.label9.TabIndex = 1;
+            this.label9.Text = "Write LEVCAN MsgID to filter out before starting logger";
+            // 
             // txtbFilters
             // 
             this.txtbFilters.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2261,15 +2270,7 @@
             this.txtbFilters.Name = "txtbFilters";
             this.txtbFilters.Size = new System.Drawing.Size(745, 687);
             this.txtbFilters.TabIndex = 0;
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(7, 20);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(265, 13);
-            this.label9.TabIndex = 1;
-            this.label9.Text = "Write LEVCAN MsgID to filter out before starting logger";
+            this.txtbFilters.Text = "919\r\n782\r\n776\r\n774\r\n775\r\n770\r\n769\r\n785\r\n791\r\n795\r\n783\r\n773\r\n918\r\n896";
             // 
             // Form1
             // 

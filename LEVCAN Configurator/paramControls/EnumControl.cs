@@ -36,6 +36,8 @@ namespace LEVCANsharpTest.paramControls
             try
             {
                 uint length = enumInfo.Size;
+                if (enumArray.Length < length)
+                    length = (uint)enumArray.Length;
                 enumVisibleArray = new string[length];
                 Array.Copy(enumArray, (int)enumInfo.Min, enumVisibleArray, 0, length);
             }

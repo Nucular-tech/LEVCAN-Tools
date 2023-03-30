@@ -124,6 +124,9 @@ namespace LEVCAN
 
         private static int QueueSendBack(lcQueue_t* queue, byte* buffer, int timeToWait)
         {
+            if (queue == null)
+                return 0;
+
             if (queue->Deleted == 0 && queue->QueueIndex < qlist.Count)
             {
                 var specificQ = qlist[(int)queue->QueueIndex];

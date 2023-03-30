@@ -12,9 +12,11 @@ namespace LEVCANsharpTest
         int TXcounter { get; set; }
         int RXcounter { get; set; }
         int Errors { get; set; }
+        string Status { get; }
         TimeSpan MaxRequestDelay { get; set; }
 
         event EventHandler OnDisconnected;
+        event EventHandler OnConnected;
 
         void Open();
         void Close();

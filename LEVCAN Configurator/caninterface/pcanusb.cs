@@ -22,10 +22,13 @@ namespace LEVCANsharpTest
         private TPCANHandle m_PcanHandle;
 
         public event EventHandler OnDisconnected;
+        public event EventHandler OnConnected;
+
         public int TXcounter { get { return txcounter; } set { txcounter = value; } }
         public int RXcounter { get { return rxcounter; } set { rxcounter = value; } }
         public int Errors { get { return errors; } set { errors = value; } }
-        public TimeSpan MaxRequestDelay { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public TimeSpan MaxRequestDelay { get { return TimeSpan.Zero; } set { } }
+
 
         public Pcanusb(LC_Node node)
         {
@@ -37,6 +40,17 @@ namespace LEVCANsharpTest
             _node = node;
             m_ReceiveEvent = new System.Threading.AutoResetEvent(false);
             m_PcanHandle = PCANBasic.PCAN_USBBUS1;
+        }
+
+        public string Status
+        {
+            get
+            {
+                if (PCANBasic.GetStatus(m_PcanHandle) == TPCANStatus.PCAN_ERROR_OK)
+                    return "PCAN USB";
+                else
+                    return null;
+            }
         }
 
         private void CANReadThreadFunc()
@@ -162,7 +176,6 @@ namespace LEVCANsharpTest
                 StringBuilder strTemp;
                 strTemp = new StringBuilder(256);
                 PCANBasic.GetErrorText(sts, 0, strTemp);
-
             }
             else
                 txcounter++;
@@ -190,21 +203,26 @@ namespace LEVCANsharpTest
             stsResult = PCANBasic.Initialize(m_PcanHandle, TPCANBaudrate.PCAN_BAUD_1M);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return;
-            System.Threading.ThreadStart threadDelegate = new System.Threading.ThreadStart(this.CANReadThreadFunc);
-            receiveThread = new System.Threading.Thread(threadDelegate);
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
 
             LC_Interface.SetFilterCallback(FilterCallback);
             LC_Interface.SetSendCallback(SendCallback);
             LC_Interface.InitQHandlers();
             LC_Interface.ConfigureFilters(_node);
+
+            System.Threading.ThreadStart threadDelegate = new System.Threading.ThreadStart(this.CANReadThreadFunc);
+            receiveThread = new System.Threading.Thread(threadDelegate);
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+
+            OnConnected?.Invoke(this, EventArgs.Empty);
         }
 
         public void Close()
         {
             LC_Interface.SetFilterCallback(null);
             LC_Interface.SetSendCallback(null);
+
+            OnDisconnected?.Invoke(this, EventArgs.Empty);
         }
     }
 }

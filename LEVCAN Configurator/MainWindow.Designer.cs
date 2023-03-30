@@ -38,12 +38,13 @@
             this.txrxLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.label2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.label5 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.label4 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.labelPort = new System.Windows.Forms.ToolStripStatusLabel();
             this.buttonBack = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowSettingsPanel = new LEVCANsharpTest.FlowNoScroll();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.label3 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
@@ -52,7 +53,6 @@
             this.tbFserverPath = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.folderBrowserDialogServer = new System.Windows.Forms.FolderBrowserDialog();
-            this.flowSettingsPanel = new LEVCANsharpTest.FlowNoScroll();
             this.statusStrip1.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -106,7 +106,7 @@
             this.txrxLabel,
             this.label2,
             this.label5,
-            this.label4});
+            this.labelPort});
             this.statusStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.statusStrip1.Location = new System.Drawing.Point(0, 366);
             this.statusStrip1.Name = "statusStrip1";
@@ -117,8 +117,8 @@
             // errorsLabel
             // 
             this.errorsLabel.Name = "errorsLabel";
-            this.errorsLabel.Size = new System.Drawing.Size(45, 17);
-            this.errorsLabel.Text = "rxLabel";
+            this.errorsLabel.Size = new System.Drawing.Size(60, 17);
+            this.errorsLabel.Text = "errorLabel";
             // 
             // txrxLabel
             // 
@@ -138,11 +138,11 @@
             this.label5.Size = new System.Drawing.Size(58, 17);
             this.label5.Text = "Maxdelay";
             // 
-            // label4
+            // labelPort
             // 
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(28, 17);
-            this.label4.Text = "cntr";
+            this.labelPort.Name = "labelPort";
+            this.labelPort.Size = new System.Drawing.Size(79, 17);
+            this.labelPort.Text = "Disconnected";
             // 
             // buttonBack
             // 
@@ -212,6 +212,20 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(414, 334);
             this.tableLayoutPanel1.TabIndex = 14;
             // 
+            // flowSettingsPanel
+            // 
+            this.flowSettingsPanel.AutoScroll = true;
+            this.flowSettingsPanel.BackColor = System.Drawing.SystemColors.Window;
+            this.flowSettingsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.flowSettingsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowSettingsPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.flowSettingsPanel.Location = new System.Drawing.Point(3, 16);
+            this.flowSettingsPanel.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
+            this.flowSettingsPanel.Name = "flowSettingsPanel";
+            this.flowSettingsPanel.Size = new System.Drawing.Size(408, 287);
+            this.flowSettingsPanel.TabIndex = 14;
+            this.flowSettingsPanel.WrapContents = false;
+            // 
             // tabPage2
             // 
             this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
@@ -241,14 +255,13 @@
             // 
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
-            "Nucular controller",
             "Nucular USB2CAN",
             "PCAN-USB"});
             this.comboBox1.Location = new System.Drawing.Point(76, 6);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 21);
             this.comboBox1.TabIndex = 4;
-            this.comboBox1.Text = "Nucular controller";
+            this.comboBox1.Text = "Nucular USB2CAN";
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // button2
@@ -287,20 +300,6 @@
             this.label6.Size = new System.Drawing.Size(82, 13);
             this.label6.TabIndex = 0;
             this.label6.Text = "File server path:";
-            // 
-            // flowSettingsPanel
-            // 
-            this.flowSettingsPanel.AutoScroll = true;
-            this.flowSettingsPanel.BackColor = System.Drawing.SystemColors.Window;
-            this.flowSettingsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.flowSettingsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowSettingsPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowSettingsPanel.Location = new System.Drawing.Point(3, 16);
-            this.flowSettingsPanel.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
-            this.flowSettingsPanel.Name = "flowSettingsPanel";
-            this.flowSettingsPanel.Size = new System.Drawing.Size(408, 287);
-            this.flowSettingsPanel.TabIndex = 14;
-            this.flowSettingsPanel.WrapContents = false;
             // 
             // MainWindow
             // 
@@ -341,7 +340,7 @@
         private System.Windows.Forms.ToolStripStatusLabel txrxLabel;
         private System.Windows.Forms.ToolStripStatusLabel label2;
         private System.Windows.Forms.ToolStripStatusLabel label5;
-        private System.Windows.Forms.ToolStripStatusLabel label4;
+        private System.Windows.Forms.ToolStripStatusLabel labelPort;
         private System.Windows.Forms.Button buttonBack;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;

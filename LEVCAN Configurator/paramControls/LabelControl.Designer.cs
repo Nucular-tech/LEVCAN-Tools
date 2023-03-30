@@ -28,8 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.NameLabel = new System.Windows.Forms.Label();
             this.TextLabel = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // NameLabel
@@ -41,6 +43,7 @@
             this.NameLabel.Size = new System.Drawing.Size(180, 26);
             this.NameLabel.TabIndex = 2;
             this.NameLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.NameLabel.MouseClick += new System.Windows.Forms.MouseEventHandler(this.NameLabel_MouseClick);
             // 
             // TextLabel
             // 
@@ -51,6 +54,7 @@
             this.TextLabel.Size = new System.Drawing.Size(112, 26);
             this.TextLabel.TabIndex = 3;
             this.TextLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.TextLabel.MouseClick += new System.Windows.Forms.MouseEventHandler(this.TextLabel_MouseClick);
             // 
             // LabelControl
             // 
@@ -72,5 +76,6 @@
 
         public System.Windows.Forms.Label NameLabel;
         public System.Windows.Forms.Label TextLabel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

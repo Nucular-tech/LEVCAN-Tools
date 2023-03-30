@@ -62,10 +62,11 @@ namespace LEVCANsharpTest
             nfs = new LC_FileServer(node);
             node.StartNode();
         }
-
+        static Mutex sync = new Mutex(false);
         void addressChanges(LC_NodeShortName shortname, ushort index, LC_AddressState state)
         {
             // listBox1.Invoke((MethodInvoker)(() =>
+            sync.WaitOne();
             {
                 switch (state)
                 {
@@ -78,10 +79,13 @@ namespace LEVCANsharpTest
                         }
                         else if (index < listOfRemotes.Count)
                         {
-                            //replace deleted one
                             if (listOfRemotes[index].ShortName.NodeID >= (ushort)LC_Address.Null)
-                            {
+                            {   //replace deleted one
                                 listOfRemotes[index].ShortName = shortname;
+                            }
+                            else
+                            {   //index moved
+                                listOfRemotes.Insert(index, new LCRemoteNode(shortname));
                             }
                         }
 
@@ -101,7 +105,7 @@ namespace LEVCANsharpTest
                         for (int i = 0; i < listOfRemotes.Count; i++)
                         {
                             if (listOfRemotes[i].ShortName.NodeID == shortname.NodeID)
-                                listOfRemotes.RemoveAt(index);
+                                listOfRemotes.RemoveAt(i);
                         }
                         break;
                 }
@@ -109,6 +113,7 @@ namespace LEVCANsharpTest
             }
 
             listbox1_Refrash();
+            sync.ReleaseMutex();
             // ));
         }
         int names = 0;
@@ -178,6 +183,10 @@ namespace LEVCANsharpTest
                 icanPort.Errors = 0;
                 //label2.Text = icanPort.AvgElapsed.ToString();//sport.elapsed.TotalMilliseconds.ToString();
                 label5.Text = "Max:" + icanPort.MaxRequestDelay.TotalMilliseconds.ToString();
+                if (icanPort.Status != null)
+                    labelPort.Text = icanPort.Status;
+                else
+                    labelPort.Text = "Disconnected";
 
             }
             //   node.SendRequest(19, LC_SystemMessage.NodeName);
@@ -201,8 +210,13 @@ namespace LEVCANsharpTest
                 return;
             }
             var selected = listOfRemotes[listBox_devices.SelectedIndex];
+            //breaks selection
+            //if (selected.Name == null)
+             //   node.SendRequest(selected.ShortName.NodeID, LC_SystemMessage.NodeName);
+
             if (selected.ShortName.Configurable)
             {
+
                 LC_ParamClient client;
                 flowSettingsPanel.Enabled = true;
                 if (nodeParams.ContainsKey(selected))
@@ -219,7 +233,8 @@ namespace LEVCANsharpTest
                 {
                     activeCl = client;
                     await client.UpdateDirectoriesAsync();
-                    FlowAddDirectory(client.Directories[0]);
+                    if (client.Directories.Count > 0)
+                        FlowAddDirectory(client.Directories[0]);
                     labelSettings.Text = "Settings";
                 }
             }
@@ -343,12 +358,10 @@ namespace LEVCANsharpTest
             switch (comboBox1.SelectedIndex)
             {
                 case 0:
-                    icanPort = new SerialNodeController(node);
+                    //icanPort = new socketcand(node); //works as shit
+                    icanPort = new NucularUSB2CAN(node);
                     break;
                 case 1:
-                    //icanPort = new socketcand(node); //works as shit
-                    break;
-                case 2:
                     icanPort = new Pcanusb(node);
                     break;
             }

@@ -73,7 +73,8 @@ namespace LEVCAN
             lcpc_Directory_t dir_struct = new lcpc_Directory_t(); //buffer
                                                                   //scan all dirs
             ushort index = 0;
-            while (state != LC_Return.OutOfRange && state != LC_Return.Timeout)
+            int outofrange = 0;
+            while (state != LC_Return.Timeout)
             {
                 sync.WaitOne();
                 state = lib_RequestDirectory(myNode.DescriptorPtr, remoteNode, index, ref dir_struct);
@@ -90,9 +91,17 @@ namespace LEVCAN
                     //create just empty one
                     dirs.Add(new LCPC_Directory(index));
                 }
-                else
+                else if(state == LC_Return.OutOfRange )
                 {
-
+                    outofrange++;
+                    //levcan bug dirsize =0 => outofrange
+                    if (outofrange > 1)
+                        state = LC_Return.Timeout;
+                    else
+                    {
+                        //create just empty one
+                        dirs.Add(new LCPC_Directory(index));
+                    }
                 }
 
                 index++;

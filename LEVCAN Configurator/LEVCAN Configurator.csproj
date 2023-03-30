@@ -82,6 +82,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="caninterface\CalculatorCRC.cs" />
+    <Compile Include="caninterface\nucularUSB.cs" />
     <Compile Include="caninterface\pcanusb.cs" />
     <Compile Include="FlowNoScroll.cs">
       <SubType>Component</SubType>
@@ -143,8 +145,6 @@
     <Compile Include="caninterface\PCANBasic.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="caninterface\serialController.cs" />
-    <Compile Include="caninterface\socketcand.cs" />
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>

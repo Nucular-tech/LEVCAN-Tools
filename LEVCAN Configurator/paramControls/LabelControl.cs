@@ -22,5 +22,23 @@ namespace LEVCANsharpTest.paramControls
             NameLabel.Text = entry.Name;
             TextLabel.Text = entry.TextData;
         }
+
+        private void NameLabel_MouseClick(object sender, MouseEventArgs e)
+        {
+            if(e.Button== MouseButtons.Right)
+            {
+                Clipboard.SetText(NameLabel.Text);
+                toolTip1.Show("Copied to clipboard", this, e.X, e.Y, 2000);
+            }
+        }
+
+        private void TextLabel_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                Clipboard.SetText(TextLabel.Text);
+                toolTip1.Show("Copied to clipboard", this, e.X, e.Y, 2000);
+            }
+        }
     }
 }

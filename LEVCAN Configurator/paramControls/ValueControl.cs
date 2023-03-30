@@ -171,6 +171,9 @@ namespace LEVCANsharpTest.paramControls
             bool parsed = false;
             object outputvalue = null;
 
+            if (ValueText.ReadOnly)
+                return;
+
             if (integer)
             {
                 var styles = NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent;
