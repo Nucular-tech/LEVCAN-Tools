@@ -11,25 +11,25 @@ namespace LEVCAN
 {
     public class LC_ParamClient
     {
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_RequestEntry", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_RequestEntry", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_requestEntry(IntPtr mynode, byte from_node, ushort directory_index, ushort entry_index, ref lcpc_Entry_t out_entry);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_CleanEntry", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_CleanEntry", CharSet = CharSet.Ansi)]
         private static extern void lib_CleanEntry(ref lcpc_Entry_t out_directory);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_RequestDirectory", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_RequestDirectory", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_RequestDirectory(IntPtr mynode, byte from_node, ushort directory_index, ref lcpc_Directory_t out_directory);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_CleanDirectory", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_CleanDirectory", CharSet = CharSet.Ansi)]
         private static extern void lib_CleanDirectory(ref lcpc_Directory_t out_directory);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_SetValue", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_SetValue", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_SetValue(IntPtr mynode, byte remote_node, ushort directory_index, ushort entry_index, IntPtr value, ushort valueSize);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_RequestValue", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_RequestValue", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_RequestValue(IntPtr mynode, byte from_node, ushort directory_index, ushort entry_index, IntPtr outVariable, ushort varSize);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LCP_ParameterClientInit", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LCP_ParameterClientInit", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_ParameterClientInit(IntPtr node);
 
         LC_Node myNode;

@@ -54,11 +54,10 @@ namespace LEVCANsharpTest
             //hardware
             //start node
             node = new LEVCAN.LC_Node(65);
-            comboBox1_SelectedIndexChanged(this, EventArgs.Empty);
+            comboBoxConnection_SelectedIndexChanged(this, EventArgs.Empty);
             LC_Interface.SetAddressCallback(addressChanges);
             node.Objects = objects;
             //init client for params
-            //pclient = new LC_ParamClient(node, 19);
             nfs = new LC_FileServer(node);
             node.StartNode();
         }
@@ -346,16 +345,16 @@ namespace LEVCANsharpTest
         }
 
         int oldIndex = -1;
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBoxConnection_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (oldIndex == comboBox1.SelectedIndex || comboBox1.SelectedIndex < 0)
+            if (oldIndex == comboBoxConnection.SelectedIndex || comboBoxConnection.SelectedIndex < 0)
                 return;
 
             //new connection source selected;
             if (icanPort != null)
                 icanPort.Close();
-            oldIndex = comboBox1.SelectedIndex;
-            switch (comboBox1.SelectedIndex)
+            oldIndex = comboBoxConnection.SelectedIndex;
+            switch (comboBoxConnection.SelectedIndex)
             {
                 case 0:
                     //icanPort = new socketcand(node); //works as shit
@@ -368,7 +367,7 @@ namespace LEVCANsharpTest
             icanPort.Open();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonFileServerPath_Click(object sender, EventArgs e)
         {
             folderBrowserDialogServer.SelectedPath = nfs.SavePath;
             var resl = folderBrowserDialogServer.ShowDialog();
@@ -387,7 +386,7 @@ namespace LEVCANsharpTest
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonForceUpdate_Click(object sender, EventArgs e)
         {
             var actnodes = node.GetActiveNodes();
             foreach (var actnode in actnodes)
@@ -395,18 +394,8 @@ namespace LEVCANsharpTest
                 node.SendData(new byte[] { 0xDA, 0xCE, 0xCA, 0x02 }, (byte)actnode.NodeID, (ushort)LC_SystemMessage.SWUpdate);
             }
         }
-
-        /* private void listDirBox_SelectedValueChanged(object sender, EventArgs e)
-         {
-             if (listDirBox.SelectedIndex == -1)
-                 return;
-             List<LCPC_Directory> dirs = (List<LCPC_Directory>)listDirBox.DataSource;
-             var selected = dirs[listDirBox.SelectedIndex];
-
-             listEntryBox.DataSource = null;
-             listEntryBox.DataSource = selected.Entries;
-         }*/
     }
+
     public static class SuspendUpdate
     {
         private const int WM_SETREDRAW = 0x000B;

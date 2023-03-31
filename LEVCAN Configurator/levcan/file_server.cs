@@ -101,13 +101,13 @@ namespace LEVCAN
         fTruncate_d fTruncate;
         fOnReceive_d fOnReceive;
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_Set_FileCallbacks", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FileCallbacks", CharSet = CharSet.Ansi)]
         private static extern void lib_setFileCallbacks(fOpen_d fopen, fTell_d ftell, fSeek_d flseek, fRead_d fread, fWrite_d fwrite, fClose_d fclose, fTruncate_d ftruncate, fSize_d fsize, fOnReceive_d onrec);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_FileServerInit", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_FileServerInit", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_FileServerInit(IntPtr node);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_FileServer", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_FileServer", CharSet = CharSet.Ansi)]
         private static extern void lib_FileServer(IntPtr node, uint tick);
 
         LC_Node _node;

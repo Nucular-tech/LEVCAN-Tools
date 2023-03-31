@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -30,16 +32,16 @@ namespace LEVCAN
         private static RemoteNodeCallback addressCallback;
         private static bool queuesSet = false;
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
         public static extern void lib_ReceiveHandler(IntPtr node, uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 2)] uint[] data, byte length);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_Set_SendCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_SendCallback", CharSet = CharSet.Ansi)]
         private static extern void lib_setSendCallback(SendCallback callback);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_Set_FilterCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FilterCallback", CharSet = CharSet.Ansi)]
         private static extern void lib_setFilterCallback(_filterCallback callback);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_ConfigureFilters", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ConfigureFilters", CharSet = CharSet.Ansi)]
         private static extern void lib_ConfigureFilters(IntPtr node);
 
         public static void SetFilterCallback(FilterCallback callback)
@@ -97,7 +99,7 @@ namespace LEVCAN
         static List<BCollectionSized> qlist;
 
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_Set_QueueCallbacks", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_QueueCallbacks", CharSet = CharSet.Ansi)]
         private static extern void _setQueueCallbacks(qCreate create, qDelete delete, qReceive receive, qSendBack toback);
 
         struct lcQueue_t
@@ -191,7 +193,7 @@ namespace LEVCAN
         }
 
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_Set_AddressCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_AddressCallback", CharSet = CharSet.Ansi)]
         private static extern void _setAddressCallback(_remoteNodeCallback callback);
 
         public static void SetAddressCallback(RemoteNodeCallback callback)
@@ -223,31 +225,31 @@ namespace LEVCAN
 
     unsafe public class LC_Node
     {
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_LibInit", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_LibInit", CharSet = CharSet.Ansi)]
         private static extern IntPtr LC_LibInit();
 
-        //[DllImport("LEVCANlibx64", EntryPoint = "LC_InitNodeDescriptor", CharSet = CharSet.Ansi)]
+        //[DllImport("LEVCANlib", EntryPoint = "LC_InitNodeDescriptor", CharSet = CharSet.Ansi)]
         //private static extern LC_Return lib_initNodeDescriptor(LC_NodeDescriptor* node);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_CreateNode", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_CreateNode", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_createNode(LC_NodeDescriptor* node);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_NetworkManager", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_NetworkManager", CharSet = CharSet.Ansi)]
         private static extern void lib_networkManager(IntPtr node, uint time);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_ReceiveManager", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveManager", CharSet = CharSet.Ansi)]
         private static extern void lib_receiveManager(IntPtr node);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_SendRequestSpec", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_SendRequestSpec", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_sendRequestSpec(IntPtr node, ushort target, ushort index, byte size, byte TCP);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_SendMessage", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_SendMessage", CharSet = CharSet.Ansi)]
         private static extern LC_Return lib_sendMessage(IntPtr node, ref lc_objectRecord obj, ushort index);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_GetActiveNodes", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_GetActiveNodes", CharSet = CharSet.Ansi)]
         private static extern LC_NodeShortName lib_getActiveNodes(IntPtr node, ref ushort position);
 
-        [DllImport("LEVCANlibx64", EntryPoint = "LC_GetNode", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_GetNode", CharSet = CharSet.Ansi)]
         private static extern LC_NodeShortName lib_getNode(ushort target);
 
 
@@ -262,8 +264,27 @@ namespace LEVCAN
 
         public LC_Node(byte nodeID)
         {
-
+            var location = Assembly.GetExecutingAssembly().Location;
+            var assemblyDir = Path.GetDirectoryName(location);
+            string arch = Environment.Is64BitProcess ? "-x64" : "-x86";
+            string fullPath;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                fullPath = Path.Combine(assemblyDir, "osx" + arch);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                fullPath = Path.Combine(assemblyDir, "linux" + arch);
+            }
+            else // RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            {
+                fullPath = Path.Combine(assemblyDir, "win" + arch);
+            }
+            string backup = Environment.CurrentDirectory;
+            //setup load path, import DLL, reset path
+            Environment.CurrentDirectory = fullPath;
             descriptor = (LC_NodeDescriptor*)LC_LibInit();
+            Environment.CurrentDirectory = backup;
 
             descriptor->ShortName.CodePage = Encoding.GetEncoding(1251);
             descriptor->ShortName.NodeID = nodeID;

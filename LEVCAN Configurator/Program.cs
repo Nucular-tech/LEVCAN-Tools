@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -21,7 +22,6 @@ namespace LEVCANsharpTest
             currentDomain.UnhandledException += GlobalUnhandledExceptionHandler;
             // Handler for exceptions in threads behind forms.
             System.Windows.Forms.Application.ThreadException += GlobalThreadExceptionHandler;
-
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
