@@ -7,8 +7,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{085F6896-82C8-4781-A9AE-600E9C3F3E60}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>LEVCANsharpTest</RootNamespace>
-    <AssemblyName>LEVCANsharpTest</AssemblyName>
+    <RootNamespace>LEVCANConfigurator</RootNamespace>
+    <AssemblyName>LEVCAN Configurator</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
