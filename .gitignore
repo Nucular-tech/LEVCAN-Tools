@@ -67,3 +67,4 @@ dkms.conf
 /LEVCAN Lib/Buid/*
 /LEVCAN.NET/obj/*
 /LEVCAN Configurator/.vs/*
+/LEVCAN.NET/bin/*
