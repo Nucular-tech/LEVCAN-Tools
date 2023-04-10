@@ -1,33 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Numerics;
 using System.Reflection;
-using System.Windows.Forms;
+using System.Runtime.InteropServices.JavaScript;
+using ImGuiNET;
+using Veldrid;
+using Veldrid.Sdl2;
+using Veldrid.StartupUtilities;
+using static ImGuiNET.ImGuiNative;
 
-namespace LEVCANsharpTest
+namespace LEVCAN_Configurator
 {
-    static class Program
+    class Program
     {
-        /// <summary>
-        /// Главная точка входа для приложения.
-        /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             AppDomain currentDomain = default(AppDomain);
             currentDomain = AppDomain.CurrentDomain;
             // Handler for unhandled exceptions.
             currentDomain.UnhandledException += GlobalUnhandledExceptionHandler;
-            // Handler for exceptions in threads behind forms.
-            System.Windows.Forms.Application.ThreadException += GlobalThreadExceptionHandler;
-
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            new MainMenu();
         }
-
         private static void GlobalUnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {
             HandleException((Exception)e.ExceptionObject);

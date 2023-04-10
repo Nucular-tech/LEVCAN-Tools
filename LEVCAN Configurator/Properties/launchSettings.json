@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LEVCAN Configurator": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

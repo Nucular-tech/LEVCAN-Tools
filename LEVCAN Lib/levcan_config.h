@@ -58,6 +58,8 @@ extern int print_log(const char* format, ...);
 //#define LEVCAN_PARAMETERS_PARSING
 //Float-point support for parameters
 #define LEVCAN_USE_FLOAT
+#define LEVCAN_USE_INT64
+#define LEVCAN_USE_DOUBLE
 //parameters receive buffer size
 #define LEVCAN_PARAM_QUEUE_SIZE 5
 

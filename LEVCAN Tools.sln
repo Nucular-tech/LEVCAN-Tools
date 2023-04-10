@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28306.52
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN Configurator", "LevCan Configurator\LEVCAN Configurator.csproj", "{8085352C-E2D3-41BE-BA3A-2A56E90F5165}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LEVCAN Lib", "LevCan Lib\LEVCAN Lib.vcxproj", "{BBC83A70-D6CC-43CB-A803-1863666B656F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN.NET", "LEVCAN.NET\LEVCAN.NET.csproj", "{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Logger", "LEVCAN Logger\LEVCAN Logger.csproj", "{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8085352C-E2D3-41BE-BA3A-2A56E90F5165}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8085352C-E2D3-41BE-BA3A-2A56E90F5165}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8085352C-E2D3-41BE-BA3A-2A56E90F5165}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8085352C-E2D3-41BE-BA3A-2A56E90F5165}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBC83A70-D6CC-43CB-A803-1863666B656F}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{BBC83A70-D6CC-43CB-A803-1863666B656F}.Release|Any CPU.ActiveCfg = Release|x64
+		{BBC83A70-D6CC-43CB-A803-1863666B656F}.Release|Any CPU.Build.0 = Release|x64
+		{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7545436E-DE4B-4943-986E-DEDB02928C56}
+	EndGlobalSection
+EndGlobal
