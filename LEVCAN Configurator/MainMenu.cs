@@ -17,6 +17,11 @@ using LEVCAN;
 using System.Xml.Linq;
 using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
+using System.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Veldrid.ImageSharp;
+using System.Reflection;
+using System.IO;
 
 namespace LEVCAN_Configurator
 {
@@ -34,8 +39,9 @@ namespace LEVCAN_Configurator
         Properties.Settings settings;
         Stopwatch stopwatch = new Stopwatch();
         long stopwatch_ms = 0;
-        static void SetThing(out float i, float val) { i = val; }
 
+        static void SetThing(out float i, float val) { i = val; }
+        List<IMGUI_TabInterface> tabsList = new List<IMGUI_TabInterface>();
         public MainMenu()
         {
             // Create window, GraphicsDevice, and all resources necessary for the demo.
@@ -51,20 +57,44 @@ namespace LEVCAN_Configurator
             };
             _cl = _gd.ResourceFactory.CreateCommandList();
             _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
+            ApplyStyle();
+
+            //Load logo in a wacky way
+            MemoryStream ms = new MemoryStream();
+            Properties.Resources.logo.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            ms.Position = 0;
+            var img = new ImageSharpTexture(ms);
+            var dimg = img.CreateDeviceTexture(_gd, _gd.ResourceFactory);
+            var ImgPtr = _controller.GetOrCreateImGuiBinding(_gd.ResourceFactory, dimg); //This returns the intPtr need for Imgui.Image()
+            var settingsTab = new SettingsTab();
+            settingsTab.logo = ImgPtr;
+
+            tabsList.Add(new ParametersTab());
+            tabsList.Add(settingsTab);
+#if DEBUG
+            tabsList.Add(new TestTab());
+#endif
 
             settings = Properties.Settings.Default;
-            ApplyStyle();
-            InitSettings();
             Lev = new LevcanHandler((CANDevice)settings.Connection);
-            Lev.FileServer.SavePath = fileserver_path;
+            Lev.FileServer.SavePath = settings.FSpath;
+
+            foreach (var tab in tabsList)
+            {
+                tab.Initialize(Lev, settings);
+            }
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
             // Main application loop
             while (_window.Exists)
             {
                 InputSnapshot snapshot = _window.PumpEvents();
-                if (!_window.Exists) { break; }
+                if (!_window.Exists)
+                    break;
                 _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
+
+                if (!_window.Focused)
+                    Thread.Sleep(50);
 
                 stopwatch.Restart();
                 SubmitUI();
@@ -103,37 +133,24 @@ namespace LEVCAN_Configurator
             ImGui.SetNextWindowSize(ImGui.GetIO().DisplaySize);
             ImGui.Begin("Base Window", ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
 
-
             ImGui.BeginChild("topmenu", new Vector2(0, -bottom_bar_offset), false);
-            if (ImGui.BeginTabBar("Base tabs", ImGuiTabBarFlags.None))
+            if (ImGui.BeginTabBar("Base tabs###secrettabkey", ImGuiTabBarFlags.None))
             {
                 //attach tabs to 'top'
                 //ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8.0f, 0.0f));
                 //ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0);
-                if (ImGui.BeginTabItem("Parameters"))
+
+                // ImGui.PopStyleVar(2);
+                for (int tabi = 0; tabi < tabsList.Count; tabi++)
                 {
-                    // ImGui.PopStyleVar(2);
-                    Draw_ParametersTab();
-                    for (int i = 0; i < Lev.listOfEvents.Count; i++)
-                    {
-                        Lev.listOfEvents[i].DrawMessage();
-                        if (Lev.listOfEvents[i].ToDelete)
-                        {
-                            Lev.listOfEvents.RemoveAt(i);
-                            i--;
-                        }
-                    }
-                    ImGui.EndTabItem();
+                    tabsList[tabi].Draw();
                 }
-                //ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8.0f, 0.0f));
-                //ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0);
-                if (ImGui.BeginTabItem("Settings"))
-                {
-                    // ImGui.PopStyleVar(2);
-                    Draw_SettingsTab();
-                    ImGui.EndTabItem();
-                }
+
                 ImGui.EndTabBar();
+            }
+            else
+            {
+                Debug.Fail("Tabs not visible");
             }
             ImGui.EndChild();
             // BOTTOM STATUS INFO

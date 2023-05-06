@@ -209,8 +209,13 @@ namespace LEVCAN
             for (; token.IsCancellationRequested == false;)
             {
                 //get all possible data without timeout
-                while (sendQueue.TryTake(out newItem, 0))
+                while (sendQueue.TryTake(out newItem, 0) && data.Count < 512)
                 {
+                    //Indexate CAN frames
+                    if (newItem[0] == (byte)usbFrameID.CAN && newItem[1] == 0xDA)
+                        newItem[1] = sentIndex++;
+
+                    newItem[15] = CalculatorCRC.Calculate_CRC8_ITU(newItem, 15);
                     data.AddRange(newItem);
                 }
                 try
@@ -226,6 +231,11 @@ namespace LEVCAN
                 //wait for more items long time
                 if (sendQueue.TryTake(out newItem, -1))
                 {
+                    //Indexate CAN frames
+                    if (newItem[0] == (byte)usbFrameID.CAN && newItem[1] == 0xDA)
+                        newItem[1] = sentIndex++;
+
+                    newItem[15] = CalculatorCRC.Calculate_CRC8_ITU(newItem, 15);
                     data.AddRange(newItem);
                 }
             }
@@ -376,7 +386,6 @@ namespace LEVCAN
                 OnDisconnected?.Invoke(this, EventArgs.Empty);
             }
         }
-
         private LC_Return SendCallback(uint header, uint[] data, byte length)
         {
             if (serialStream == null)
@@ -387,7 +396,7 @@ namespace LEVCAN
 
             usbCanFrame_t senddata = new usbCanFrame_t();
             senddata.Divider = (byte)usbFrameID.CAN;
-            senddata.Number = sentIndex++;
+            senddata.Number = 0xDA;// sentIndex++;
             senddata.DLC = length;
             senddata.EXID_RTR = convertID;
             senddata.Data = data;
@@ -401,7 +410,6 @@ namespace LEVCAN
             try
             {
                 var bytes = CastingHelper.CastToArray(senddata);
-                bytes[15] = CalculatorCRC.Calculate_CRC8_ITU(bytes, 15);
                 sendQueue.TryAdd(bytes);
             }
             catch
@@ -443,16 +451,6 @@ namespace LEVCAN
             //copy 29b EXID
             regSTM32 |= (reg & 0x1FFFFFFF)/* << 3*/;
             maskSTM32 |= (mask & 0x1FFFFFFF) /*<< 3*/;
-            /*
-            if ((reg & (1 << 29)) != 0) //RTR
-            {
-                regSTM32 |= 1 << 1; //stm32 RTR
-            }
-
-            if ((mask & (1 << 29)) != 0) //RTR
-            {
-                maskSTM32 |= 1 << 1;//stm32 RTR
-            }*/
 
             usbFrameFilter29b_t senddata = new usbFrameFilter29b_t();
             senddata.Divider = (byte)usbFrameID.Command;
@@ -463,7 +461,6 @@ namespace LEVCAN
             senddata.Mask = maskSTM32;
 
             var filter = CastingHelper.CastToArray(senddata);
-            filter[15] = CalculatorCRC.Calculate_CRC8_ITU(filter, 15);
             var res = sendQueue.TryAdd(filter);
             return LC_Return.Ok;
 

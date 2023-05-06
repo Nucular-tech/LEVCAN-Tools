@@ -137,7 +137,7 @@ namespace LEVCAN
             {
                 byte[] dataBytes = new byte[size];
                 //levcan.c will take care about memfree
-                Marshal.Copy((IntPtr)data, dataBytes, 0, 0);
+                Marshal.Copy((IntPtr)data, dataBytes, 0, size);
                 _callback.Invoke(header, dataBytes);
             }
             else

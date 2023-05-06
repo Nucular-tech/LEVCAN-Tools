@@ -119,22 +119,22 @@ namespace LEVCAN
         {
             get { return savePath; }
             set
-            {
+            {                
                 if (!Directory.Exists(value))
                 {
                     Directory.CreateDirectory(value);
                 }
                 //todo close opened files? or keep them alive sice there is no conflict?
-                savePath = value;
+                savePath = Path.GetFullPath(value);
             }
         }
 
-        public LC_FileServer(LC_Node node)
+        public LC_FileServer(LC_Node node, string path)
         {
             initCallbacks();
             lib_FileServerInit(node.DescriptorPtr);
             _node = node;
-            SavePath = Path.Combine(Directory.GetCurrentDirectory(), "files");
+            SavePath = path;
 
             mutex = new SemaphoreSlim(0);
             var updates = new Thread(FileServerThread);

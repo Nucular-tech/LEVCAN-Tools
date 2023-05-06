@@ -3,6 +3,7 @@ using LEVCAN.NET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -24,7 +25,7 @@ namespace LEVCAN_Configurator
     {
         public Icanbus icanPort;
         public LC_Node Node;
-        LC_IObject[] lc_objects;
+        List<LC_IObject> lc_objects = new List<LC_IObject>();
 
         public Dictionary<LCRemoteNode, LC_ParamClient> nodeParams = new Dictionary<LCRemoteNode, LC_ParamClient>();
         public List<LCRemoteNode> listOfRemotes = new List<LCRemoteNode>();
@@ -33,22 +34,21 @@ namespace LEVCAN_Configurator
 
         public LevcanHandler(CANDevice cdevice = CANDevice.Nucular_USB2CAN)
         {
-            lc_objects = new LC_IObject[2];
             //objects[0] = new LC_Object((ushort)LC_SystemMessage.NodeName, new LC_Obj_ThrottleV_t(), LC_ObjectAttributes.Writable);
             var obj = new LC_ObjectString((ushort)LC_SystemMessage.NodeName, null, 128, LC_ObjectAttributes.Writable);
             obj.OnChange += nodename;
-            lc_objects[1] = obj;
+            lc_objects.Add(obj);
 
             //init node and load DLL
             Node = new LC_Node(65);
             //hardware
             DeviceSelect(cdevice);
             //objects
-            lc_objects[0] = new LC_Events(Node, eventCallback);
-            Node.Objects = lc_objects;
+            lc_objects.Add(new LC_Events(Node, eventCallback));
+            Node.Objects = lc_objects.ToArray();
             Node.AddressChanges += node_AddressChanges;
             //init client for parameters
-            FileServer = new LC_FileServer(Node);
+            FileServer = new LC_FileServer(Node, Path.Combine(Directory.GetCurrentDirectory(), "files"));
             Node.StartNode();
         }
 
@@ -175,6 +175,12 @@ namespace LEVCAN_Configurator
                 nodeParams.Add(selected, client); //save bind      
             }
             return client;
+        }
+
+        public void AddNodeObject(LC_IObject lcobj)
+        {
+            lc_objects.Add(lcobj);
+            Node.Objects = lc_objects.ToArray();
         }
     }
 

@@ -13,7 +13,7 @@ using System.Xml.Linq;
 
 namespace LEVCAN
 {
-    
+
 
     internal class BCollectionSized : BlockingCollection<byte[]>
     {
@@ -96,7 +96,7 @@ namespace LEVCAN
         {
             AddressChangeArgs args = new AddressChangeArgs();
             args.ShortName = shortname;
-            args.Index = index; 
+            args.Index = index;
             args.State = state;
 
             AddressChanges?.Invoke(this, args);
@@ -149,6 +149,12 @@ namespace LEVCAN
                 //copy data
                 for (int i = 0; i < size; i++)
                 {
+                    if (objects[i] == null)
+                    {
+                        objects_node[i].Index = 0;
+                        objects_node[i].Address = null;
+                        continue;
+                    }
                     objects_node[i].Attributes = objects[i].Attributes;
                     if (objects[i].Index > (ushort)LC_SystemMessage.MaxMessageID)
                         throw new IndexOutOfRangeException("Index " + objects[i].Index.ToString() + " is out of range!");
@@ -159,7 +165,7 @@ namespace LEVCAN
 
                 }
                 //assign obj list
-                descriptor->ObjectsSize = 0;
+                descriptor->ObjectsSize = 0; //sync
                 descriptor->objects = objects_node;
                 descriptor->ObjectsSize = size;
 
@@ -182,9 +188,9 @@ namespace LEVCAN
 
             return SendRequest((byte)target, (ushort)index, false);
         }
-        public LC_Return SendRequest(byte target, ushort index, bool TCP)
+        public LC_Return SendRequest(ushort target, ushort index, bool TCP = false)
         {
-            if (target > (byte)LC_Address.Broadcast)
+            if (target > (ushort)LC_Address.Broadcast)
                 throw new ArgumentOutOfRangeException("Target ID out of range!");
 
             return lib_sendRequestSpec(DescriptorPtr, target, index, 0, (byte)(TCP ? 1 : 0));

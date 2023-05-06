@@ -1,5 +1,6 @@
 ﻿using ImGuiNET;
 using LEVCAN;
+using LEVCAN_Configurator.Properties;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -7,7 +8,7 @@ using System.Windows.Forms;
 
 namespace LEVCAN_Configurator
 {
-    internal partial class MainMenu
+    internal class ParametersTab : IMGUI_TabInterface
     {
         Vector2 left_pane_vec = new Vector2(250, 0);
         Vector2 right_pane_vec = new Vector2(0, 0);
@@ -17,71 +18,98 @@ namespace LEVCAN_Configurator
         List<LCPC_Directory> pathSelect = new List<LCPC_Directory>();
         int updateNumber = 0, updateFrame = 0;
         LC_ParamClient paramClient;
+        LevcanHandler Lev;
+        Settings settings;
 
-        void Draw_ParametersTab()
+        public ParametersTab()
         {
-            if (request_name_timeout > 0)
-                request_name_timeout--;
-            ImGui.BeginChild("left pane nodes", left_pane_vec, true);
+        }
+
+        public void Initialize(LevcanHandler lchandler, Settings settings)
+        {
+            Lev = lchandler;
+            this.settings = settings;
+        }
+        
+        public bool Draw()
+        {
+            if (ImGui.BeginTabItem("Parameters"))
             {
-                //remote LEVCAN device list
-                for (int ri = 0; ri < Lev.listOfRemotes.Count; ri++)
+                if (request_name_timeout > 0)
+                    request_name_timeout--;
+                ImGui.BeginChild("left pane nodes", left_pane_vec, true);
                 {
-                    var remoteid = Lev.listOfRemotes[ri];
-                    //fix for not ready local node
-                    if (remoteid.Name == null && request_name_timeout == 0)
+                    //remote LEVCAN device list
+                    for (int ri = 0; ri < Lev.listOfRemotes.Count; ri++)
                     {
-                        Lev.Node.SendRequest(remoteid.ShortName.NodeID, LC_SystemMessage.NodeName);
-                        request_name_timeout = 10; //fps
-                    }
-                    //select item
-                    if (ImGui.Selectable(remoteid.ToString(), selected == remoteid))
-                    {
-                        if (remoteid.ShortName.Configurable)
+                        var remoteid = Lev.listOfRemotes[ri];
+                        //fix for not ready local node
+                        if (remoteid.Name == null && request_name_timeout == 0)
                         {
-                            new_selected = remoteid;
+                            Lev.Node.SendRequest(remoteid.ShortName.NodeID, LC_SystemMessage.NodeName);
+                            request_name_timeout = 10; //fps
                         }
+                        //select item
+                        if (ImGui.Selectable(remoteid.ToString(), selected == remoteid))
+                        {
+                            if (remoteid.ShortName.Configurable)
+                            {
+                                new_selected = remoteid;
+                            }
+                        }
+                        ShowNodeContextMenu(remoteid);
                     }
-                    ShowNodeContextMenu(remoteid);
-                }
 
-                ImGui.EndChild();
-            }
-            ImGui.SameLine();
-            ImGui.BeginChild("right pane params", right_pane_vec, true);
-            {
-                if (new_selected != null)
+                    ImGui.EndChild();
+                }
+                ImGui.SameLine();
+                ImGui.BeginChild("right pane params", right_pane_vec, true);
                 {
-                    selected = new_selected;
-                    new_selected = null;
+                    if (new_selected != null)
+                    {
+                        selected = new_selected;
+                        new_selected = null;
 
-                    paramClient = Lev.GetParametersClient(selected);
-                    _ = paramClient.UpdateDirectoriesAsync();
+                        paramClient = Lev.GetParametersClient(selected);
+                        _ = paramClient.UpdateDirectoriesAsync();
+                    }
+
+                    if (paramClient != null && paramClient.ToBeDisposed)
+                        paramClient = null;
+
+                    if (paramClient != null && paramClient.Directories.Count > 0)
+                    {
+                        ImGui.PushItemWidth(200);
+
+                        updateNumber = 0;
+
+                        DrawParameters(paramClient.Directories, 0);
+                        //update one parameter per frame, but not more than 4 times per sec
+                        updateFrame++;
+                        if (updateNumber < 15)
+                            updateNumber = 15; // limit to 4hz
+                        if (updateFrame > updateNumber)
+                            updateFrame = 0;
+                        ImGui.PopItemWidth();
+                    }
+
+                    ImGui.EndChild();
                 }
-
-                if (paramClient != null && paramClient.ToBeDisposed)
-                    paramClient = null;
-
-                if (paramClient != null && paramClient.Directories.Count > 0)
+                // Pop-up events
+                for (int i = 0; i < Lev.listOfEvents.Count; i++)
                 {
-                    ImGui.PushItemWidth(200);
-
-                    updateNumber = 0;
-
-                    DrawParameters(paramClient.Directories, 0);
-                    //update one parameter per frame, but not more than 4 times per sec
-                    updateFrame++;
-                    if (updateNumber < 15)
-                        updateNumber = 15; // limit to 4hz
-                    if (updateFrame > updateNumber)
-                        updateFrame = 0;
-                    ImGui.PopItemWidth();
+                    Lev.listOfEvents[i].DrawMessage();
+                    if (Lev.listOfEvents[i].ToDelete)
+                    {
+                        Lev.listOfEvents.RemoveAt(i);
+                        i--;
+                    }
                 }
-
-                ImGui.EndChild();
+                ImGui.EndTabItem();
+                return true;
             }
-
-
+            else
+                return false;
         }
 
         unsafe void DrawParameters(List<LCPC_Directory> directories, int dindex)
@@ -295,7 +323,7 @@ namespace LEVCAN_Configurator
                         {
                             //TODO add editor
                             uint item = Convert.ToUInt32(entry.Variable);
-                            ImGui.Text(entry.Name + " : " + Convert.ToString(item, 2));
+                            ImGui.Text(entry.Name + " = 0b" + Convert.ToString(item, 2));
                             ShowContextMenuForText(entry.Name);
                         }
                         break;
@@ -370,7 +398,7 @@ namespace LEVCAN_Configurator
             if (ImGui.Selectable("Copy and Print"))
             {
                 Clipboard.SetText(copytext);
-                PrinterCOM.Print(printerText.Replace("%s", copytext), comPrinterPort);
+                PrinterCOM.Print(settings.PrinterText.Replace("%s", copytext), settings.COMPrinter);
             }
             ImGui.EndPopup();
         }
@@ -386,5 +414,6 @@ namespace LEVCAN_Configurator
                 ImGui.EndPopup();
             }
         }
+
     }
 }
