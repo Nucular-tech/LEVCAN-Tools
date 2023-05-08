@@ -9,7 +9,7 @@ namespace LEVCAN_Configurator
 {
     internal interface IMGUI_TabInterface
     {
-        public void Initialize(LevcanHandler lchandler, Settings settings);
-        public bool Draw();        
+        public bool Draw();
+        public void Initialize(LevcanHandler lchandler, Settings settings);       
     }
 }

@@ -201,7 +201,7 @@ namespace LEVCAN_Configurator
             if (ShortName.NodeID > (ushort)LC_Address.Null)
                 return "Invalid node";
             else
-                return ShortName.NodeID.ToString() + " : " + Name;
+                return ShortName.NodeID.ToString() + ": " + Name;
         }
     }
 }

@@ -356,7 +356,7 @@ namespace LEVCAN
                             LC_Interface.lib_ReceiveHandler(_node.DescriptorPtr, convertID, candata.Data, candata.DLC);
                             rxcounter++;
                         }
-                        else if (buffer[0] == (byte)usbFrameID.USB)//CAN frame
+                        else if (buffer[0] == (byte)usbFrameID.USB)//USB frame
                         {
                             usbStatus = CastingHelper.CastToStruct<usbStatusFrame_t>(buffer.ToArray());
                             usbStatus.FreeCANframes = (ushort)(usbStatus.FreeCANframes >> 8);

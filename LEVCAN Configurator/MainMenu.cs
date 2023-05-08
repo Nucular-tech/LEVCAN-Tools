@@ -22,6 +22,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Veldrid.ImageSharp;
 using System.Reflection;
 using System.IO;
+using LEVCAN_Configurator.Tabs;
 
 namespace LEVCAN_Configurator
 {
@@ -70,6 +71,7 @@ namespace LEVCAN_Configurator
             settingsTab.logo = ImgPtr;
 
             tabsList.Add(new ParametersTab());
+            tabsList.Add(new DashboardTab());
             tabsList.Add(settingsTab);
 #if DEBUG
             tabsList.Add(new TestTab());
@@ -94,7 +96,7 @@ namespace LEVCAN_Configurator
                 _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
 
                 if (!_window.Focused)
-                    Thread.Sleep(50);
+                    Thread.Sleep(10);
 
                 stopwatch.Restart();
                 SubmitUI();
@@ -253,7 +255,7 @@ namespace LEVCAN_Configurator
             style.Colors[(int)ImGuiCol.TabUnfocusedActive] = new Vector4(0.7411764860153198f, 0.8196078538894653f, 0.9137254953384399f, 1.0f);
             style.Colors[(int)ImGuiCol.PlotLines] = new Vector4(0.3882353007793427f, 0.3882353007793427f, 0.3882353007793427f, 1.0f);
             style.Colors[(int)ImGuiCol.PlotLinesHovered] = new Vector4(1.0f, 0.4274509847164154f, 0.3490196168422699f, 1.0f);
-            style.Colors[(int)ImGuiCol.PlotHistogram] = new Vector4(0.1127853021025658f, 0.305435836315155f, 0.6738197803497314f, 1.0f);
+            style.Colors[(int)ImGuiCol.PlotHistogram] = new Vector4(0.4140249490737915f, 0.5209223628044128f, 0.725321888923645f, 1.0f);
             style.Colors[(int)ImGuiCol.PlotHistogramHovered] = new Vector4(0.2671627700328827f, 0.4638949334621429f, 0.8412017226219177f, 1.0f);
             style.Colors[(int)ImGuiCol.TableHeaderBg] = new Vector4(0.7764706015586853f, 0.8666666746139526f, 0.9764705896377563f, 1.0f);
             style.Colors[(int)ImGuiCol.TableBorderStrong] = new Vector4(0.5686274766921997f, 0.5686274766921997f, 0.6392157077789307f, 1.0f);
@@ -266,6 +268,7 @@ namespace LEVCAN_Configurator
             style.Colors[(int)ImGuiCol.NavWindowingHighlight] = new Vector4(0.6980392336845398f, 0.6980392336845398f, 0.6980392336845398f, 0.699999988079071f);
             style.Colors[(int)ImGuiCol.NavWindowingDimBg] = new Vector4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f);
             style.Colors[(int)ImGuiCol.ModalWindowDimBg] = new Vector4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.3499999940395355f);
+
         }
     }
 }

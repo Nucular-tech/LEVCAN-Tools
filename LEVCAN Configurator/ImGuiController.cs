@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using ImGuiNET;
 using System.Linq;
 using LEVCAN;
+using System.Text;
 
 namespace LEVCAN_Configurator
 {
@@ -66,7 +67,7 @@ namespace LEVCAN_Configurator
             ImGui.SetCurrentContext(context);
             var fonts = ImGui.GetIO().Fonts;
             var imio = ImGui.GetIO();
-            ImGuiNET.
+
             //minimum default
             ImFontConfig config = new ImFontConfig(); //will be copied locally after pass
             config.FontDataOwnedByAtlas = 1;
@@ -76,11 +77,20 @@ namespace LEVCAN_Configurator
             config.GlyphMaxAdvanceX = float.MaxValue;
             config.RasterizerMultiply = 1;
             config.EllipsisChar = 0x0085;
-            config.GlyphOffset = new Vector2(0,-1);
-            config.GlyphExtraSpacing = new Vector2(0.5f, 0);
+            config.GlyphOffset = new Vector2(0, -1);
+            config.GlyphExtraSpacing = new Vector2(0, 0);
             //imio.Fonts.AddFontDefault();
             var font2 = fonts.AddFontFromFileTTF(@"Resources/NotoSansDisplay-Medium.ttf", 19, &config, imio.Fonts.GetGlyphRangesCyrillic());
-            
+            //for variables
+            config.GlyphExtraSpacing = new Vector2(0f, 0);
+            byte[] ranges = new byte[3 * 2];
+            Encoding.Unicode.GetBytes(" ").CopyTo(ranges, 0);
+            Encoding.Unicode.GetBytes("°").CopyTo(ranges, 2);
+            ranges[3] = 0;
+            fixed (byte* range = &ranges[0])
+            {
+                var font3 = fonts.AddFontFromFileTTF(@"Resources/NotoSansDisplay-Medium.ttf", 28, &config, (IntPtr)range); 
+            }
             ImGui.GetIO().BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             CreateDeviceResources(gd, outputDescription);

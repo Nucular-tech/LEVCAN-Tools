@@ -84,7 +84,7 @@ namespace LEVCAN
         public int Size { get; }
         public IntPtr Pointer { get; }
 
-        Type type;
+        Type? type;
 
         /// <summary>
         /// Create callback object, struct type
