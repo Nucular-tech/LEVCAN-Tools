@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LEVCAN_Configurator_Shared;
 
 namespace LEVCAN_Configurator
 {
-    internal interface IMGUI_TabInterface
+
+    internal interface IMGUI_TabInterface : LEVCAN_ConfiguratorDrawI
     {
-        public bool Draw();
-        public void Initialize(LevcanHandler lchandler, Settings settings);       
+        public void Initialize(LevcanHandler lchandler, Settings settings);
     }
+
 }

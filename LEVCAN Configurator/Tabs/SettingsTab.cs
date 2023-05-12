@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LEVCAN_Configurator_Shared;
 
 namespace LEVCAN_Configurator
 {
@@ -29,10 +30,6 @@ namespace LEVCAN_Configurator
         LevcanHandler Lev;
         Settings settings;
         public IntPtr logo = IntPtr.Zero;
-
-        public SettingsTab()
-        {
-        }
 
         public void Initialize(LevcanHandler lchandler, Settings settings)
         {

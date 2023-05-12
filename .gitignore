@@ -51,20 +51,17 @@ Module.symvers
 Mkfile.old
 dkms.conf
 /.vs/
-/LEVCAN Configurator/obj/*
-/LEVCAN Configurator/bin/*
 /LEVCAN Lib/.vs/*
 *.user
 /LEVCAN Lib/x64/
 /LEVCAN Logger/obj/
 /packages/
-/Nucular Configurator/*
 /x64/*
 /LEVCAN on NetCore/*
 /LEVCAN Logger/bin/*
 /LEVCAN Lib/Debug/*
-/Bin/*
 /LEVCAN Lib/Buid/*
-/LEVCAN.NET/obj/*
 /LEVCAN Configurator/.vs/*
-/LEVCAN.NET/bin/*
+*/obj/*
+*/bin/*
+/Bin

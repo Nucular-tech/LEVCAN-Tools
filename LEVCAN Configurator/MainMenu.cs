@@ -1,28 +1,18 @@
 ﻿using ImGuiNET;
-using LEVCAN_Configurator;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using Veldrid.StartupUtilities;
 using Veldrid;
 using Veldrid.Sdl2;
-using System.Runtime.InteropServices.JavaScript;
-using Vortice.Mathematics;
-using System.Runtime.InteropServices;
-using LEVCAN;
-using System.Xml.Linq;
 using System.Diagnostics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using System.Threading;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using Veldrid.ImageSharp;
-using System.Reflection;
-using System.IO;
 using LEVCAN_Configurator.Tabs;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
+using LEVCAN_Configurator_Shared;
+using System.Drawing;
+using LEVCAN_Configurator.Helpers;
 
 namespace LEVCAN_Configurator
 {
@@ -42,8 +32,12 @@ namespace LEVCAN_Configurator
         long stopwatch_ms = 0;
 
         static void SetThing(out float i, float val) { i = val; }
-        List<IMGUI_TabInterface> tabsList = new List<IMGUI_TabInterface>();
-        public MainMenu()
+
+        [ImportMany]
+        private IEnumerable<LEVCAN_ConfiguratorTabI> PluginTabs { get; set; }
+        List<LEVCAN_ConfiguratorDrawI> tabsList = new List<LEVCAN_ConfiguratorDrawI>();
+
+        public void RunMain()
         {
             // Create window, GraphicsDevice, and all resources necessary for the demo.
             VeldridStartup.CreateWindowAndGraphicsDevice(
@@ -60,31 +54,45 @@ namespace LEVCAN_Configurator
             _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
             ApplyStyle();
 
-            //Load logo in a wacky way
-            MemoryStream ms = new MemoryStream();
-            Properties.Resources.logo.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            ms.Position = 0;
-            var img = new ImageSharpTexture(ms);
-            var dimg = img.CreateDeviceTexture(_gd, _gd.ResourceFactory);
-            var ImgPtr = _controller.GetOrCreateImGuiBinding(_gd.ResourceFactory, dimg); //This returns the intPtr need for Imgui.Image()
-            var settingsTab = new SettingsTab();
-            settingsTab.logo = ImgPtr;
-
-            tabsList.Add(new ParametersTab());
-            tabsList.Add(new DashboardTab());
-            tabsList.Add(settingsTab);
-#if DEBUG
-            tabsList.Add(new TestTab());
-#endif
-
             settings = Properties.Settings.Default;
             Lev = new LevcanHandler((CANDevice)settings.Connection);
             Lev.FileServer.SavePath = settings.FSpath;
 
-            foreach (var tab in tabsList)
+            List<IMGUI_TabInterface> tabsListInit = new List<IMGUI_TabInterface>();
+            tabsListInit.Add(new ParametersTab());
+            tabsListInit.Add(new DashboardTab());
+            var settingsTab = new SettingsTab();
+            settingsTab.logo = ImageLoader.GetImGUITexture(Properties.Resources.logo, _gd, _controller);
+            tabsListInit.Add(settingsTab);
+            tabsListInit.Add(new EventsNotifications());
+            foreach (var tab in tabsListInit)
             {
                 tab.Initialize(Lev, settings);
+                tabsList.Add(tab);
             }
+
+            try
+            {
+                var catalog = new DirectoryCatalog("Plugins");
+                using (var container = new CompositionContainer(catalog))
+                {
+                    // Match Imports in "prgm" object with corresponding exports in all catalogs in the container
+                    container.ComposeParts(this);
+                }
+            }
+            catch { }
+
+
+            if (PluginTabs != null)
+                foreach (var tab in PluginTabs)
+                {
+                    try
+                    {
+                        tab.Initialize(Lev);
+                        tabsList.Add(tab);
+                    }
+                    catch { }
+                }
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
             // Main application loop
@@ -121,6 +129,8 @@ namespace LEVCAN_Configurator
             _cl.Dispose();
             _gd.Dispose();
         }
+
+
 
         float bottom_bar_offset = 30;
         int ticks = 0, txrx_count = 0;

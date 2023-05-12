@@ -11,6 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN.NET", "LEVCAN.NET\LE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Logger", "LEVCAN Logger\LEVCAN Logger.csproj", "{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanTestTab", "TestTabLib\CanTestTab.csproj", "{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Configurator Shared", "LEVCAN Configurator Shared\LEVCAN Configurator Shared.csproj", "{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +36,14 @@ Global
 		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

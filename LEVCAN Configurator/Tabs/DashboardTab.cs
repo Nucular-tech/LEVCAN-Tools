@@ -8,6 +8,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using LEVCAN_Configurator_Shared;
 
 namespace LEVCAN_Configurator.Tabs
 {
@@ -17,6 +18,10 @@ namespace LEVCAN_Configurator.Tabs
         LevcanHandler Lev;
         Dictionary<ushort, DeviceInfo> deviceList = new Dictionary<ushort, DeviceInfo>();
         Knob barknob;
+        ImFontPtr bigNumberFont;
+        Vector2 sizeMin = new Vector2(250, 150);
+        Vector2 sizeMax = new Vector2(600, 600);
+        Vector2 positionOffset = new Vector2(5, 35);
 
         public void Initialize(LevcanHandler lchandler, Settings settings)
         {
@@ -31,6 +36,12 @@ namespace LEVCAN_Configurator.Tabs
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellsV, ProcessMessage, LC_ObjectAttributes.Writable, -194)); //up to 96 cells
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellBalance, ProcessMessage, LC_ObjectAttributes.Writable, -32));
             barknob = new Knob(ImGuiDataType.Float, ImGuiKnobVariant.WiperOnly, 110, ImGuiKnobFlags.BottomTitle | ImGuiKnobFlags.NoInput | ImGuiKnobFlags.NoHover | ImGuiKnobFlags.CenterValue, 0.6f, 0.7f);
+
+            if (ImGui.GetIO().Fonts.Fonts.Size > 1)
+                bigNumberFont = ImGui.GetIO().Fonts.Fonts[1];
+            else
+                bigNumberFont = ImGui.GetIO().Fonts.Fonts[0];
+
         }
 
         private void ProcessMessage(LC_Header header, object data)
@@ -67,7 +78,7 @@ namespace LEVCAN_Configurator.Tabs
                     if (lenght16b < 2)
                         break;
                     short[] sdata = new short[lenght16b - 1];
-                    Buffer.BlockCopy(databytes, 2, sdata, 0, databytes.Length);
+                    Buffer.BlockCopy(databytes, 2, sdata, 0, databytes.Length - 2);
                     deviceinfo.CellV = sdata;
                     break;
 
@@ -114,13 +125,17 @@ namespace LEVCAN_Configurator.Tabs
 
         void DrawControllerWindow(LCRemoteNode remote, DeviceInfo info)
         {
-            ImGui.SetNextWindowSize(new Vector2(250, 315));
-            ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
+            ImGui.SetNextWindowPos(positionOffset, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(sizeMin, sizeMax);
+            ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
             ClampBorder();
             //Controller area
+            ImGui.PushFont(bigNumberFont);
             ImGui.Text($"{info.DCSupply.Voltage / 1000.0f:0.00}V");
             ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetWindowWidth() / 2);
             ImGui.Text($"{info.WattageFromSupply:0.}W");
+            ImGui.PopFont();
 
             barknob.DrawValueKnob("Controller", $"{info.InternalTemp}°C", info.InternalTemp / 100.0f);
             ImGui.SameLine();
@@ -129,11 +144,14 @@ namespace LEVCAN_Configurator.Tabs
 
             ImGui.Separator();
             //Motor area
+            ImGui.PushFont(bigNumberFont);
             ImGui.Text($"{info.RPMSpeed.RPM} RPM");
+            ImGui.PopFont();
             barknob.DrawValueKnob("Motor", $"{info.Temp.ExternalTemp}°C", (float)info.Temp.ExternalTemp / (float)150);
             ImGui.SameLine();
             barknob.DrawValueKnob("Motor I", $"{info.MotorI:0.0}A", info.MotoriRate);
 
+            NewWindowOffset();
             ImGui.End();
 
             if (info.NeedRequest)
@@ -148,27 +166,41 @@ namespace LEVCAN_Configurator.Tabs
 
         void DrawBMSWindow(LCRemoteNode remote, DeviceInfo info)
         {
-            ImGui.SetNextWindowSize(new Vector2(250, 250));
+            ImGui.SetNextWindowPos(positionOffset, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSize(new Vector2(250, 300));
             ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
             ClampBorder();
             //Battery area
+            ImGui.PushFont(bigNumberFont);
             ImGui.Text($"{info.DCSupply.Voltage / 1000.0f:0.00}V");
             ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetWindowWidth() / 2);
             ImGui.Text($"{info.WattageFromSupply:0.}W");
+            ImGui.PopFont();
 
-            ImGui.ProgressBar((float)info.Temp.InternalTemp / (float)1000, Vector2.Zero, $"{info.Temp.InternalTemp / 10.0f:0.0}°C Battery");
-            if (info.Temp.InternalTemp > 500)
-            {   //Bms getting too hot!
-                ImGui.SameLine();
-                ImGui.Text("!!");
-            }
-            ImGui.ProgressBar(info.DCiRate, Vector2.Zero, $"{info.DCi:0.0}A Battery");
+            barknob.DrawValueKnob("Battery", $"{info.Temp.InternalTemp / 10.0f:0.0}°C", (float)info.Temp.InternalTemp / (float)1000);
+            ImGui.SameLine();
+            barknob.DrawValueKnob("Battery I", $"{info.DCi:0.0}A", info.DCiRate);
+
             ImGui.Separator();
 
-            ImGui.Text($"Min cell: {info.CellMinMax.CellMin}mV");
-            ImGui.Text($"Max cell: {info.CellMinMax.CellMin}mV");
+            ImGui.Text($"Min: {info.CellMinMax.CellMin}mV");
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(ImGui.GetWindowWidth() / 2);
+            ImGui.Text($"Max: {info.CellMinMax.CellMax}mV");
 
-            ImGui.PlotHistogram("Cells", ref info.CellsV_f[0], info.CellsV_f.Length);
+            float center = (info.CellMinMax.CellMax + info.CellMinMax.CellMin) / 2.0f / 1000.0f;
+            float min = (info.CellMinMax.CellMin) / 1000.0f;
+            int Ysize = (int)ImGui.GetContentRegionAvail().Y;
+            if (min > center - Ysize / 1000.0f)
+                min = center - Ysize / 1000.0f;
+            float max = (info.CellMinMax.CellMax) / 1000.0f;
+            if (max < center + Ysize / 1000.0f)
+                max = center + Ysize / 1000.0f;
+
+            ImGui.PlotHistogram("##Cells", ref info.CellsV_f[0], info.CellsV_f.Length, 0, "Cells", min, max, new Vector2(ImGui.GetContentRegionAvail().X, Ysize));
+
+            NewWindowOffset();
             ImGui.End();
 
             if (info.NeedRequest)
@@ -183,8 +215,9 @@ namespace LEVCAN_Configurator.Tabs
 
         void DrawuLightWindow(LCRemoteNode remote, DeviceInfo info)
         {
-            ImGui.SetNextWindowSize(new Vector2(250, 250));
-            ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
+            ImGui.SetNextWindowPos(positionOffset, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(sizeMin, sizeMax);
+            ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
             ClampBorder();
             //Battery area
             ImGui.Text($"{info.DCSupply.Voltage / 1000.0f:0.00}V");
@@ -196,6 +229,7 @@ namespace LEVCAN_Configurator.Tabs
             ImGui.Text($"T2: {info.Temp.ExtraTemp2 / 10.0f:0.0} °C");
             ImGui.Text($"Internal: {info.Temp.InternalTemp / 10.0f:0.0} °C");
 
+            NewWindowOffset();
             ImGui.End();
 
             if (info.NeedRequest)
@@ -204,6 +238,7 @@ namespace LEVCAN_Configurator.Tabs
                 //Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_InternalVoltage);
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_Temperature);
             }
+
         }
 
         void ClampBorder()
@@ -239,6 +274,18 @@ namespace LEVCAN_Configurator.Tabs
             }
 
         }
+
+        void NewWindowOffset()
+        {
+            Vector2 size = ImGui.GetWindowSize();
+            positionOffset.X += size.X+5;
+            if (positionOffset.X > ImGui.GetWindowViewport().Size.X)
+            {
+                positionOffset.X = 0;
+                positionOffset.Y += size.Y+5;
+            }
+        }
+
     }
 
     class DeviceInfo

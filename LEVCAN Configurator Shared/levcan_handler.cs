@@ -1,27 +1,18 @@
 ﻿using LEVCAN;
 using LEVCAN.NET;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using static System.Windows.Forms.AxHost;
 
-namespace LEVCAN_Configurator
+namespace LEVCAN_Configurator_Shared
 {
-    enum CANDevice
+    public enum CANDevice
     {
         Nucular_USB2CAN,
         PCAN_USB,
         Null
     }
 
-    internal class LevcanHandler
+    public class LevcanHandler
     {
         public Icanbus icanPort;
         public LC_Node Node;
@@ -29,7 +20,8 @@ namespace LEVCAN_Configurator
 
         public Dictionary<LCRemoteNode, LC_ParamClient> nodeParams = new Dictionary<LCRemoteNode, LC_ParamClient>();
         public List<LCRemoteNode> listOfRemotes = new List<LCRemoteNode>();
-        public List<EventMessage> listOfEvents = new List<EventMessage>();
+        public delegate void UpdateEvent(LC_Event_t evnt);
+        public UpdateEvent UpdateEventHandler;
         public LC_FileServer FileServer;
 
         public LevcanHandler(CANDevice cdevice = CANDevice.Nucular_USB2CAN)
@@ -108,19 +100,8 @@ namespace LEVCAN_Configurator
 
         private void eventCallback(LC_Event_t eventData)
         {
-            //find existing event
-            for (int i = 0; i < listOfEvents.Count; i++)
-            {
-                if (listOfEvents[i].Sender == eventData.Sender)
-                { //replace
-                    listOfEvents[i].UpdateMessage(eventData);
-                    return;
-                }
-            }
-            //add new
-            listOfEvents.Add(new EventMessage(eventData));
+            UpdateEventHandler?.Invoke(eventData);
         }
-
 
         void nodename(LC_Header hdr, string name)
         {
@@ -184,7 +165,7 @@ namespace LEVCAN_Configurator
         }
     }
 
-    class LCRemoteNode
+    public class LCRemoteNode
     {
         public Encoding Encoding;
         public LC_NodeShortName ShortName;

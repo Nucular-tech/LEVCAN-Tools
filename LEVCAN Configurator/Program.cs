@@ -1,14 +1,11 @@
 ﻿using System;
+using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices.JavaScript;
-using ImGuiNET;
-using Veldrid;
-using Veldrid.Sdl2;
-using Veldrid.StartupUtilities;
-using static ImGuiNET.ImGuiNative;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
 
 namespace LEVCAN_Configurator
 {
@@ -21,7 +18,9 @@ namespace LEVCAN_Configurator
             currentDomain = AppDomain.CurrentDomain;
             // Handler for unhandled exceptions.
             currentDomain.UnhandledException += GlobalUnhandledExceptionHandler;
-            new MainMenu();
+
+            var main = new MainMenu();
+            main.RunMain();
         }
         private static void GlobalUnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e)
         {

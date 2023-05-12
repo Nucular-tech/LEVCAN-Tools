@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LEVCAN_Configurator
 {
-    internal class EventMessage
+    public class EventMessage
     {
         LC_Event_t eventData;
         public ushort Sender { get => eventData.Sender; }
@@ -19,6 +19,7 @@ namespace LEVCAN_Configurator
             eventData = data;
         }
 
+        bool bringToFront = false;
         public void DrawMessage()
         {
             var size = ImGui.CalcTextSize(eventData.Text);
@@ -29,6 +30,9 @@ namespace LEVCAN_Configurator
             ImGui.SetNextWindowSize(new Vector2(50, 75) + size);
             //override ID to CAN device ID, more stable result
             ImGui.Begin(eventData.Caption + $"###IDevent{Sender}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
+            if (bringToFront)
+                ImGui.SetWindowFocus();
+
             ImGui.TextWrapped(eventData.Text);
             if (ImGui.Button("Close"))
             {
@@ -40,6 +44,7 @@ namespace LEVCAN_Configurator
         public void UpdateMessage(LC_Event_t data)
         {
             eventData = data;
+            bringToFront = true;
         }
     }
 }

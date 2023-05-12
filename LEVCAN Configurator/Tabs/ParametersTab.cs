@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Windows.Forms;
+using LEVCAN_Configurator_Shared;
 
 namespace LEVCAN_Configurator
 {
@@ -94,16 +95,6 @@ namespace LEVCAN_Configurator
                     }
 
                     ImGui.EndChild();
-                }
-                // Pop-up events
-                for (int i = 0; i < Lev.listOfEvents.Count; i++)
-                {
-                    Lev.listOfEvents[i].DrawMessage();
-                    if (Lev.listOfEvents[i].ToDelete)
-                    {
-                        Lev.listOfEvents.RemoveAt(i);
-                        i--;
-                    }
                 }
                 ImGui.EndTabItem();
                 return true;
