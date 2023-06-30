@@ -41,7 +41,7 @@ namespace LEVCAN_Configurator
         {
             // Create window, GraphicsDevice, and all resources necessary for the demo.
             VeldridStartup.CreateWindowAndGraphicsDevice(
-                new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, "LEVCAN Configurator"),
+                new WindowCreateInfo(50, 50, 800, 750, WindowState.Normal, "LEVCAN Configurator"),
                 new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
                 out _window,
                 out _gd);
@@ -134,6 +134,8 @@ namespace LEVCAN_Configurator
 
         float bottom_bar_offset = 30;
         int ticks = 0, txrx_count = 0;
+        string status;
+
         private void SubmitUI()
         {
             // Demo code adapted from the official Dear ImGui demo program:
@@ -168,17 +170,18 @@ namespace LEVCAN_Configurator
             // BOTTOM STATUS INFO
             float saved_cursorY = ImGui.GetCursorPosY();
             float framerate = ImGui.GetIO().Framerate;
-            string status = Lev.icanPort.Status;
-            if (status == null)
-                status = "Disconnected";
-            ticks++;
 
+            ticks++;
             if (ticks >= 30)
             {
                 ticks = 0;
                 txrx_count = Lev.icanPort.TXcounter + Lev.icanPort.RXcounter;
                 Lev.icanPort.TXcounter = 0;
                 Lev.icanPort.RXcounter = 0;
+
+                status = Lev.icanPort.Status;
+                if (status == null)
+                    status = "Disconnected";
             }
             ImGui.Text($"{status} | TX/RX: {txrx_count} | Application average {stopwatch_ms:0.##} ms/frame ({framerate:0.#} FPS) | ");
             bottom_bar_offset = ImGui.GetCursorPosY() - saved_cursorY;

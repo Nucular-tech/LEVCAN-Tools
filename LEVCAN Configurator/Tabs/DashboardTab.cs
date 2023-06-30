@@ -22,6 +22,10 @@ namespace LEVCAN_Configurator.Tabs
         Vector2 sizeMin = new Vector2(250, 150);
         Vector2 sizeMax = new Vector2(600, 600);
         Vector2 positionOffset = new Vector2(5, 35);
+        byte[] brakeData;
+        byte[] noBrakeData;
+        bool braked = false;
+        LC_Obj_Buttons_t buttons = new LC_Obj_Buttons_t();
 
         public void Initialize(LevcanHandler lchandler, Settings settings)
         {
@@ -42,6 +46,11 @@ namespace LEVCAN_Configurator.Tabs
             else
                 bigNumberFont = ImGui.GetIO().Fonts.Fonts[0];
 
+            LC_Obj_ControlFactorInt_t brk = new LC_Obj_ControlFactorInt_t();
+            brk.BrakeFactor = 10000;
+            brakeData = CastingHelper.CastToArray(brk);
+            brk.BrakeFactor = 100;
+            noBrakeData = CastingHelper.CastToArray(brk);
         }
 
         private void ProcessMessage(LC_Header header, object data)
@@ -91,6 +100,26 @@ namespace LEVCAN_Configurator.Tabs
         {
             if (ImGui.BeginTabItem("Dashboard"))
             {
+                ImGui.AlignTextToFramePadding(); ImGui.Text("Controls:"); ImGui.SameLine();
+                ImGui.Checkbox($"Brake", ref braked);
+                if (braked)
+                    buttons.Buttons = LC_Obj_Buttons_Bt.Brake;
+                else
+                    buttons.Buttons &= ~LC_Obj_Buttons_Bt.Brake;
+
+                for (int i = 1; i < 9; i++)
+                {
+                    bool checkvalue = (buttons.extraButtons & (1 << (i - 1))) != 0;
+                    ImGui.SameLine();
+                    ImGui.Checkbox($"CAN {i}", ref checkvalue);
+                    if (checkvalue)
+                        buttons.extraButtons |= (ushort)(1 << (i - 1));
+                    else
+                        buttons.extraButtons &= (ushort)~(1 << (i - 1));
+                }
+                Lev.Node.SendData(CastingHelper.CastToArray(buttons), (byte)LC_Address.Broadcast, (ushort)LC_Objects_Std.LC_Obj_Buttons);
+
+
                 ImGui.BeginChild("deviceInfoChild");
                 for (int ri = 0; ri < Lev.listOfRemotes.Count; ri++)
                 {
@@ -109,6 +138,7 @@ namespace LEVCAN_Configurator.Tabs
                         case (ushort)LC_Device.LC_Device_BMS:
                             DrawBMSWindow(remoteid, deviceInfo);
                             break;
+                        case (ushort)LC_Device.LC_Device_Debug:
                         case (ushort)LC_Device.LC_Device_Light:
                             DrawuLightWindow(remoteid, deviceInfo);
                             break;
@@ -278,11 +308,11 @@ namespace LEVCAN_Configurator.Tabs
         void NewWindowOffset()
         {
             Vector2 size = ImGui.GetWindowSize();
-            positionOffset.X += size.X+5;
+            positionOffset.X += size.X + 5;
             if (positionOffset.X > ImGui.GetWindowViewport().Size.X)
             {
                 positionOffset.X = 0;
-                positionOffset.Y += size.Y+5;
+                positionOffset.Y += size.Y + 5;
             }
         }
 
@@ -335,8 +365,8 @@ namespace LEVCAN_Configurator.Tabs
         }
 
 
-        public int maxDCI = 1;
-        public int minDCI = -1;
+        public int maxDCI = 50000;
+        public int minDCI = -25000;
         public float DCiRate
         {
             get
@@ -358,8 +388,8 @@ namespace LEVCAN_Configurator.Tabs
             }
         }
 
-        public int maxMotorI = 1;
-        public int minMotorI = -1;
+        public int maxMotorI = 100000;
+        public int minMotorI = -50000;
         public float MotoriRate
         {
             get

@@ -41,6 +41,7 @@ namespace LEVCAN
         static Mutex sync = new Mutex(false);
         bool toBeDisposed = false;
         public bool ToBeDisposed { get => toBeDisposed; }
+        public Encoding Encoding { get => remoteEncoding; }
 
         public LC_ParamClient(LC_Node node, ushort fromID, Encoding enc = null)
         {
@@ -236,7 +237,7 @@ namespace LEVCAN
     public class LCPC_Entry : IDisposable
     {
         public string Name { get; }
-        public string TextData { get; }
+        public string? TextData { get; }
         public object Descriptor { get; }
         public ushort Index { get; }
         public ushort VariableSize { get; }
@@ -279,26 +280,35 @@ namespace LEVCAN
                     break;
                 case LCP_EntryType.Int32:
                     t = typeof(LCP_Int32);
+                    TextData = TextData?.Replace("%s", "%d");
                     break;
                 case LCP_EntryType.Uint32:
                     t = typeof(LCP_Uint32);
+                    TextData = TextData?.Replace("%s", "%u");
                     break;
                 case LCP_EntryType.Int64:
                     t = typeof(LCP_Int64);
+                    TextData = TextData?.Replace("%s", "%dl");
                     break;
                 case LCP_EntryType.Uint64:
                     t = typeof(LCP_Uint64);
+                    TextData = TextData?.Replace("%s", "%ul");
                     break;
                 case LCP_EntryType.Float:
                     t = typeof(LCP_Float);
+                    TextData = TextData?.Replace("%s", "%.3f");
                     break;
                 case LCP_EntryType.Double:
+                    TextData = TextData?.Replace("%s", "%.6f");
                     t = typeof(LCP_Double);
                     break;
                 case LCP_EntryType.Decimal32:
                     t = typeof(LCP_Decimal32);
                     break;
-                case LCP_EntryType.End:
+                case LCP_EntryType.String:
+                    t = typeof(LCP_String);
+                    break;
+                default:
                     break;
             }
             if (t != null && entry.Descriptor != null)
@@ -413,6 +423,26 @@ namespace LEVCAN
                             break;
                     }
                 }
+                else if (EType == LCP_EntryType.String)
+                {
+                    LCP_String parm = (LCP_String)Descriptor;
+                    if (parm.Flags.HasFlag(LCP_StringFlags.ASCII))
+                    {
+                        var = Encoding.ASCII.GetString((byte*)VariablePtr, VariableSize);
+                    }
+                    else if (parm.Flags.HasFlag(LCP_StringFlags.UTF8))
+                    {
+                        var = Encoding.UTF8.GetString((byte*)VariablePtr, VariableSize);
+                    }
+                    else if (parm.Flags.HasFlag(LCP_StringFlags.UTF16))
+                    {
+                        var = Encoding.Unicode.GetString((byte*)VariablePtr, VariableSize);
+                    }
+                    else
+                    {
+                        var = client.Encoding.GetString((byte*)VariablePtr, VariableSize);
+                    }
+                }
 
                 return var;
             }
@@ -421,54 +451,111 @@ namespace LEVCAN
             {
                 if (EType == LCP_EntryType.Int32 || EType == LCP_EntryType.Int64 || EType == LCP_EntryType.Decimal32)
                 {
+                    long valueFixed = Convert.ToInt64(value);
+                    switch (EType)
+                    {
+                        case LCP_EntryType.Decimal32:
+                            if (valueFixed < ((LCP_Decimal32)Descriptor).Min)
+                                valueFixed = ((LCP_Decimal32)Descriptor).Min;
+                            if (valueFixed > ((LCP_Decimal32)Descriptor).Max)
+                                valueFixed = ((LCP_Decimal32)Descriptor).Max;
+                            break;
+                        case LCP_EntryType.Int32:
+                            if (valueFixed < ((LCP_Int32)Descriptor).Min)
+                                valueFixed = ((LCP_Int32)Descriptor).Min;
+                            if (valueFixed > ((LCP_Int32)Descriptor).Max)
+                                valueFixed = ((LCP_Int32)Descriptor).Max;
+                            break;
+                        case LCP_EntryType.Int64:
+                            if (valueFixed < ((LCP_Int64)Descriptor).Min)
+                                valueFixed = ((LCP_Int64)Descriptor).Min;
+                            if (valueFixed > ((LCP_Int64)Descriptor).Max)
+                                valueFixed = ((LCP_Int64)Descriptor).Max;
+                            break;
+                    }
                     switch (VariableSize)
-
                     {
                         case 1:
-                            *(sbyte*)VariablePtr = (sbyte)(int)value;
+                            *(sbyte*)VariablePtr = (sbyte)valueFixed;
                             break;
                         case 2:
-                            *(short*)VariablePtr = (short)(int)value;
+                            *(short*)VariablePtr = (short)valueFixed;
                             break;
                         case 4:
-                            *(int*)VariablePtr = (int)value;
+                            *(int*)VariablePtr = (int)valueFixed;
                             break;
                         case 8:
-                            *(long*)VariablePtr = (long)value;
+                            *(long*)VariablePtr = (long)valueFixed;
                             break;
                     }
                 }
                 else if (EType == LCP_EntryType.Bitfield32 || EType == LCP_EntryType.Enum || EType == LCP_EntryType.Uint32 || EType == LCP_EntryType.Uint64)
                 {
+                    ulong valueFixed = Convert.ToUInt64(value);
+                    switch (EType)
+                    {
+                        case LCP_EntryType.Bitfield32:
+                            valueFixed = ((LCP_Bitfield32)Descriptor).Mask & valueFixed;
+                            break;
+                        case LCP_EntryType.Enum:
+                            if (valueFixed < ((LCP_Enum)Descriptor).Min)
+                                valueFixed = ((LCP_Enum)Descriptor).Min;
+                            if (valueFixed > ((LCP_Enum)Descriptor).Min + ((LCP_Enum)Descriptor).Size)
+                                valueFixed = ((LCP_Enum)Descriptor).Min + ((LCP_Enum)Descriptor).Size;
+                            break;
+                        case LCP_EntryType.Uint32:
+                            if (valueFixed < ((LCP_Uint32)Descriptor).Min)
+                                valueFixed = ((LCP_Uint32)Descriptor).Min;
+                            if (valueFixed > ((LCP_Uint32)Descriptor).Max)
+                                valueFixed = ((LCP_Uint32)Descriptor).Max;
+                            break;
+                        case LCP_EntryType.Uint64:
+                            if (valueFixed < ((LCP_Uint64)Descriptor).Min)
+                                valueFixed = ((LCP_Uint64)Descriptor).Min;
+                            if (valueFixed > ((LCP_Uint64)Descriptor).Max)
+                                valueFixed = ((LCP_Uint64)Descriptor).Max;
+                            break;
+                    }
                     switch (VariableSize)
                     {
                         case 1:
-                            *(byte*)VariablePtr = Convert.ToByte(value);
+                            *(byte*)VariablePtr = Convert.ToByte(valueFixed);
                             break;
                         case 2:
-                            *(ushort*)VariablePtr = Convert.ToUInt16(value);
+                            *(ushort*)VariablePtr = Convert.ToUInt16(valueFixed);
                             break;
                         case 4:
-                            *(uint*)VariablePtr = Convert.ToUInt32(value);
+                            *(uint*)VariablePtr = Convert.ToUInt32(valueFixed);
                             break;
                         case 8:
-                            *(ulong*)VariablePtr = Convert.ToUInt64(value);
+                            *(ulong*)VariablePtr = Convert.ToUInt64(valueFixed);
                             break;
 
                     }
                 }
                 else if (EType == LCP_EntryType.Float)
                 {
+                    float valueFixed = (float)value;
+                    if (valueFixed < ((LCP_Float)Descriptor).Min)
+                        valueFixed = ((LCP_Float)Descriptor).Min;
+                    if (valueFixed > ((LCP_Float)Descriptor).Max)
+                        valueFixed = ((LCP_Float)Descriptor).Max;
+
                     if (VariableSize == 4)
                     {
-                        *(float*)VariablePtr = (float)value;
+                        *(float*)VariablePtr = valueFixed;
                     }
                 }
                 else if (EType == LCP_EntryType.Double)
                 {
+                    double valueFixed = (double)value;
+                    if (valueFixed < ((LCP_Double)Descriptor).Min)
+                        valueFixed = ((LCP_Double)Descriptor).Min;
+                    if (valueFixed > ((LCP_Double)Descriptor).Max)
+                        valueFixed = ((LCP_Double)Descriptor).Max;
                     if (VariableSize == 8)
                     {
-                        *(double*)VariablePtr = (double)value;
+                        *(double*)VariablePtr = valueFixed;
                     }
                 }
                 else if (EType == LCP_EntryType.Bool)
@@ -489,6 +576,9 @@ namespace LEVCAN
                             break;
 
                     }
+                }
+                else if (EType == LCP_EntryType.String)
+                {
                 }
             }
         }

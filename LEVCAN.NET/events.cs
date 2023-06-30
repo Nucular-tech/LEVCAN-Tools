@@ -110,7 +110,7 @@ namespace LEVCAN.NET
                 event_value.Buttons = (LC_EventButtons_t)raw_evnt.Buttons;
                 event_value.Caption = Text8z.PtrToString(raw_evnt.Caption, encoding, 128);
                 Marshal.FreeHGlobal(raw_evnt.Caption);
-                event_value.Text = Text8z.PtrToString(raw_evnt.Text, encoding, 128);
+                event_value.Text = Text8z.PtrToString(raw_evnt.Text, encoding, 512);
                 Marshal.FreeHGlobal(raw_evnt.Text);
                 event_value.Icon = (LC_EventIcon_t)raw_evnt.Icon;
 

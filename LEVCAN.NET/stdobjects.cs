@@ -166,8 +166,8 @@ namespace LEVCAN
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
     public struct LC_Obj_Buttons_t
     {
-        ushort buttons;
-        ushort extraButtons;
+        public ushort buttons;
+        public ushort extraButtons;
 
         public LC_Obj_Buttons_Bt Buttons
         {

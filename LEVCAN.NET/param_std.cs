@@ -33,8 +33,8 @@ namespace LEVCAN
         public ushort Size;
         public ushort DirectoryIndex;
         public IntPtr Name { get { return (IntPtr)_name; } }
-    }; 
-    
+    };
+
     [Flags]
     public enum LCP_Mode
     {
@@ -132,5 +132,37 @@ namespace LEVCAN
         public int Max;
         public int Step;
         public byte Decimals;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LCP_String
+    {
+        ushort flags; //LCP_StringFlags
+        public ushort MinLength;
+        public ushort MaxLength;
+        public ushort Reserved;
+
+        public LCP_StringFlags Flags
+        { get { return (LCP_StringFlags)flags; } }
+    };
+
+    [Flags]
+    public enum LCP_StringFlags
+    {
+        None = 0, // just text
+        Numeric = 1 << 0, // numbers only
+        Hexadecimal = 1 << 1, // Hex numbers
+        Letters = 1 << 2, // letters only
+        NoBlank = 1 << 3, // no blank letters
+        SpecChar = 1 << 4, // special character, e.g., ! @ # ?
+        Password = 1 << 5, // show ***
+        Email = 1 << 6, // one@two.com
+        Phone = 1 << 7, // +1(234)567 89 89
+        Website = 1 << 8, // www.dot.com
+        Multiline = 1 << 9, // allow /r/n
+        Uppercase = 1 << 10, // UPPERCASE
+        UTF8 = 1 << 14, // force UTF8 encoding (char)
+        UTF16 = 1 << 15, // force UTF16 encoding (wchar)
+        ASCII = UTF8 | UTF16 // force ASCII encoding (char)
     };
 }

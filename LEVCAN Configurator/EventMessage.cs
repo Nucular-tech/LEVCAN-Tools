@@ -17,6 +17,7 @@ namespace LEVCAN_Configurator
         public EventMessage(LC_Event_t data)
         {
             eventData = data;
+            bringToFront = true;
         }
 
         bool bringToFront = false;
@@ -31,7 +32,10 @@ namespace LEVCAN_Configurator
             //override ID to CAN device ID, more stable result
             ImGui.Begin(eventData.Caption + $"###IDevent{Sender}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
             if (bringToFront)
+            {
                 ImGui.SetWindowFocus();
+                bringToFront = false;
+            }
 
             ImGui.TextWrapped(eventData.Text);
             if (ImGui.Button("Close"))
@@ -44,7 +48,6 @@ namespace LEVCAN_Configurator
         public void UpdateMessage(LC_Event_t data)
         {
             eventData = data;
-            bringToFront = true;
         }
     }
 }

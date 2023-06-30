@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Windows.Forms;
 using LEVCAN_Configurator_Shared;
+using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.Xml.Linq;
 
 namespace LEVCAN_Configurator
 {
@@ -13,6 +16,7 @@ namespace LEVCAN_Configurator
     {
         Vector2 left_pane_vec = new Vector2(250, 0);
         Vector2 right_pane_vec = new Vector2(0, 0);
+        Vector4 disabled_colour = new Vector4(100, 132, 155, 128);
         int request_name_timeout = 0;
         LCRemoteNode selected;
         LCRemoteNode new_selected;
@@ -31,7 +35,7 @@ namespace LEVCAN_Configurator
             Lev = lchandler;
             this.settings = settings;
         }
-        
+
         public bool Draw()
         {
             if (ImGui.BeginTabItem("Parameters"))
@@ -119,6 +123,8 @@ namespace LEVCAN_Configurator
                 {
                     flags |= ImGuiInputTextFlags.ReadOnly;
                     readonly_value = true;
+                    if (entry.EType != LCP_EntryType.Folder)
+                        ImGui.PushStyleColor(ImGuiCol.FrameBg, 0x1FFFFFFF);
                 }
                 //safe for same parameter name
                 ImGui.PushID(entryindex);
@@ -191,7 +197,7 @@ namespace LEVCAN_Configurator
                             uint item = Convert.ToUInt32(entry.Variable);
                             var desc = ((LCP_Enum)entry.Descriptor);
                             ImGuiComboFlags fl = 0;
-                            if (flags.HasFlag(ImGuiInputTextFlags.ReadOnly))
+                            if (readonly_value)
                             {
                                 fl = ImGuiComboFlags.NoArrowButton;
                             }
@@ -223,11 +229,12 @@ namespace LEVCAN_Configurator
                         {
                             int value = Convert.ToInt32(entry.Variable);
                             int step = ((LCP_Int32)entry.Descriptor).Step;
-                            if (ImGui.InputScalar(entry.Name, ImGuiDataType.S32, (IntPtr)(&value), readonly_value ? IntPtr.Zero : (IntPtr)(&step), IntPtr.Zero, entry.TextData, flags))
+                            if (ImGui.InputScalar(entry.Name, ImGuiDataType.S32, (IntPtr)(&value), readonly_value ? IntPtr.Zero : (IntPtr)(&step), (IntPtr)(&step), entry.TextData, flags))
                             {
                                 entry.Variable = value;
                                 _ = entry.SendVariable();
                             }
+
                             ShowContextMenuForText(entry.Name + " = " + value.ToString());
                         }
                         break;
@@ -298,12 +305,76 @@ namespace LEVCAN_Configurator
 
                     case LCP_EntryType.Decimal32:
                         {
-                            int item = Convert.ToInt32(entry.Variable);
+                            int value = Convert.ToInt32(entry.Variable);
                             var descr = (LCP_Decimal32)entry.Descriptor;
-                            string decitext = ToDecimals(item, descr);
-                            if (ImGui.InputText(entry.Name, ref decitext, 128, flags))
+                            string decitext = ToDecimals(value, descr);
+                            //check for formatting
+                            if (entry.TextData != null && entry.TextData.Contains("%s"))
                             {
-                                entry.Variable = FromDecimal(decitext, descr);
+                                decitext = entry.TextData.Replace("%s", decitext);
+                            }
+                            bool value_changed = false;
+                            float button_size = ImGui.GetFrameHeight();
+                            var styleSpacingX = ImGui.GetStyle().ItemInnerSpacing.X;
+
+                            int steps = 50;
+                            if (descr.Step != 0)
+                                steps = (descr.Max - descr.Min) / descr.Step;
+                            if (steps < 50 && !readonly_value)
+                            {
+                                //for low step count use slider
+                                int sliderIndex = (value - descr.Min + descr.Step / 2) / descr.Step;
+                                if (ImGui.SliderInt(entry.Name, ref sliderIndex, 0, steps, decitext, ImGuiSliderFlags.NoInput))
+                                {
+                                    value = sliderIndex * descr.Step + descr.Min;
+                                    value_changed = true;
+                                }
+                            }
+                            else
+                            {
+                                //check if can draw +-
+                                bool addPlusMinus = (descr.Step != 0 && !readonly_value);
+                                if (addPlusMinus)
+                                    ImGui.SetNextItemWidth(Math.Max(1.0f, ImGui.CalcItemWidth() - (button_size + styleSpacingX) * 2));
+
+                                //normal text input
+                                if (ImGui.InputText(addPlusMinus ? "##input" : entry.Name, ref decitext, 128, flags))
+                                {
+                                    value = FromDecimal(decitext, descr);
+                                    value_changed = true;
+                                }
+                                if (addPlusMinus)
+                                {
+                                    // Draw buttons for our weird data type
+                                    if (readonly_value)
+                                        ImGui.BeginDisabled();
+
+                                    ImGui.PushButtonRepeat(true);
+                                    ImGui.SameLine(0, styleSpacingX);
+                                    var btsize = new Vector2(button_size, button_size);
+                                    if (ImGui.Button("-", btsize))
+                                    {
+                                        value -= descr.Step;
+                                        value_changed = true;
+                                    }
+                                    ImGui.SameLine(0, styleSpacingX);
+                                    if (ImGui.Button("+", btsize))
+                                    {
+                                        value += descr.Step;
+                                        value_changed = true;
+                                    }
+                                    ImGui.PopButtonRepeat();
+
+                                    if (readonly_value)
+                                        ImGui.EndDisabled();
+                                    //parameter name hidden in textinput
+                                    ImGui.SameLine(0, styleSpacingX);
+                                    ImGui.Text(entry.Name);
+                                }
+                            }
+                            if (value_changed)
+                            {
+                                entry.Variable = value;
                                 _ = entry.SendVariable();
                             }
                             ShowContextMenuForText(entry.Name + " = " + decitext);
@@ -318,8 +389,18 @@ namespace LEVCAN_Configurator
                             ShowContextMenuForText(entry.Name);
                         }
                         break;
+
+                    case LCP_EntryType.String:
+                        {
+                            //TODO add editor
+                            ImGui.Text((string)entry.Variable);
+                            ShowContextMenuForText(entry.Name + " = " + (string)entry.Variable);
+                        }
+                        break;
                 }
                 ImGui.PopID();
+                if (readonly_value && entry.EType != LCP_EntryType.Folder)
+                    ImGui.PopStyleColor();
                 //todo: change visible check to per-item to avoid overlap with context menu
                 if (entry.Mode.HasFlag(LCP_Mode.LiveUpdate) && ImGui.IsItemVisible())
                 {
@@ -358,7 +439,8 @@ namespace LEVCAN_Configurator
         int FromDecimal(string text, LCP_Decimal32 descr)
         {
             double reslt = 0;
-            bool parsed = Double.TryParse(text, out reslt);
+            string onlynumber = new string(text.Trim().TakeWhile(c => char.IsDigit(c) || c == '.').ToArray());
+            bool parsed = Double.TryParse(onlynumber, out reslt);
             if (parsed)
                 return (int)(reslt * Math.Pow(10, descr.Decimals));
             else

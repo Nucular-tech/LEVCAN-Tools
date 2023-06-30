@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using Timer = System.Timers.Timer;
 using TPCANHandle = System.UInt16;
 
 namespace LEVCAN
@@ -29,6 +31,8 @@ namespace LEVCAN
         public int Errors { get { return errors; } set { errors = value; } }
         public TimeSpan MaxRequestDelay { get { return TimeSpan.Zero; } set { } }
 
+        //reset busheavy by timer
+        Timer heavyTim = new Timer(TimeSpan.FromSeconds(1));
 
         public Pcanusb(LC_Node node)
         {
@@ -40,16 +44,35 @@ namespace LEVCAN
             _node = node;
             m_ReceiveEvent = new System.Threading.AutoResetEvent(false);
             m_PcanHandle = PCANBasic.PCAN_USBBUS1;
+            heavyTim.Elapsed += HeavyTim_Elapsed;
+        }
+
+        private void HeavyTim_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (PCANBasic.GetStatus(m_PcanHandle) != TPCANStatus.PCAN_ERROR_BUSHEAVY)
+                return;
+            //quick reset
+            Close();
+            Task.Delay(100);
+            Open();
         }
 
         public string Status
         {
             get
             {
-                if (PCANBasic.GetStatus(m_PcanHandle) == TPCANStatus.PCAN_ERROR_OK)
-                    return "PCAN USB";
-                else
-                    return null;
+                var state = PCANBasic.GetStatus(m_PcanHandle);
+                switch (state)
+                {
+                    default:
+                        return null;
+                    case TPCANStatus.PCAN_ERROR_INITIALIZE:
+                    case TPCANStatus.PCAN_ERROR_BUSHEAVY:
+                    case TPCANStatus.PCAN_ERROR_BUSOFF:
+                        return "PCAN USB (bus off)";
+                    case TPCANStatus.PCAN_ERROR_OK:
+                        return "PCAN USB";
+                }
             }
         }
 
@@ -60,7 +83,6 @@ namespace LEVCAN
 
             iBuffer = Convert.ToUInt32(m_ReceiveEvent.SafeWaitHandle.DangerousGetHandle().ToInt32());
             // Sets the handle of the Receive-Event.
-
             stsResult = PCANBasic.SetValue(m_PcanHandle, TPCANParameter.PCAN_RECEIVE_EVENT, ref iBuffer, sizeof(UInt32));
             iBuffer = PCANBasic.PCAN_PARAMETER_ON;
             stsResult |= PCANBasic.SetValue(m_PcanHandle, TPCANParameter.PCAN_BUSOFF_AUTORESET, ref iBuffer, sizeof(UInt32));
@@ -70,7 +92,7 @@ namespace LEVCAN
                 return;
             }
 
-            while (true)
+            while (receiveThread != null)
             {
                 // Waiting for Receive-Event
                 // 
@@ -86,6 +108,10 @@ namespace LEVCAN
                         stsResult = ReadMessage();
                         if (stsResult == TPCANStatus.PCAN_ERROR_ILLOPERATION)
                             break;
+                        //receiving data but bus stuck? reset!
+                        if (PCANBasic.GetStatus(m_PcanHandle) == TPCANStatus.PCAN_ERROR_BUSHEAVY)
+                            heavyTim.Start();
+
                     } while ((!Convert.ToBoolean(stsResult & TPCANStatus.PCAN_ERROR_QRCVEMPTY)));
                 }
             }
@@ -138,6 +164,7 @@ namespace LEVCAN
             return data;
         }
 
+
         private LC_Return SendCallback(uint header, uint[] data, byte length)
         {
             LC_HeaderPacked headerPacked = new LC_HeaderPacked(header);
@@ -145,11 +172,7 @@ namespace LEVCAN
             CANMsg.DATA = new byte[8];
             CANMsg.MSGTYPE = TPCANMessageType.PCAN_MESSAGE_EXTENDED;
 
-            if (headerPacked.Request == 0)
-            {
-
-            }
-            else
+            if (headerPacked.Request != 0)
             {
                 headerPacked.Request = 0;
                 CANMsg.MSGTYPE |= TPCANMessageType.PCAN_MESSAGE_RTR;
@@ -168,18 +191,24 @@ namespace LEVCAN
                 CANMsg.DATA[6] = (byte)((data[1] >> 2 * 8) & 0xFF);
                 CANMsg.DATA[7] = (byte)((data[1] >> 3 * 8) & 0xFF);
             }
-            var sts = PCANBasic.Write(m_PcanHandle, ref CANMsg);
-
-            if (sts != TPCANStatus.PCAN_ERROR_OK)
+            var busstatus = PCANBasic.GetStatus(m_PcanHandle);
+            if (busstatus == TPCANStatus.PCAN_ERROR_OK)
             {
-                errors++;
-                StringBuilder strTemp;
-                strTemp = new StringBuilder(256);
-                PCANBasic.GetErrorText(sts, 0, strTemp);
+                var sts = PCANBasic.Write(m_PcanHandle, ref CANMsg);
+
+                if (sts != TPCANStatus.PCAN_ERROR_OK)
+                {
+                    errors++;
+                    StringBuilder strTemp;
+                    strTemp = new StringBuilder(256);
+                    PCANBasic.GetErrorText(sts, 0, strTemp);
+                }
+                else
+                    txcounter++;
+                return LC_Return.Ok;
             }
-            else
-                txcounter++;
-            return LC_Return.Ok;
+
+            return LC_Return.BufferFull;
         }
 
 
@@ -199,6 +228,7 @@ namespace LEVCAN
 
         public void Open()
         {
+
             LC_Interface.SetFilterCallback(FilterCallback);
             LC_Interface.SetSendCallback(SendCallback);
             LC_Interface.InitQHandlers();
@@ -209,10 +239,13 @@ namespace LEVCAN
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return;
 
-            System.Threading.ThreadStart threadDelegate = new System.Threading.ThreadStart(this.CANReadThreadFunc);
-            receiveThread = new System.Threading.Thread(threadDelegate);
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
+            if (receiveThread == null)
+            {
+                System.Threading.ThreadStart threadDelegate = new System.Threading.ThreadStart(this.CANReadThreadFunc);
+                receiveThread = new System.Threading.Thread(threadDelegate);
+                receiveThread.IsBackground = true;
+                receiveThread.Start();
+            }
 
             OnConnected?.Invoke(this, EventArgs.Empty);
         }
@@ -221,13 +254,15 @@ namespace LEVCAN
         {
             LC_Interface.SetFilterCallback(null);
             LC_Interface.SetSendCallback(null);
+            receiveThread = null;
 
+            PCANBasic.Uninitialize(m_PcanHandle);
             OnDisconnected?.Invoke(this, EventArgs.Empty);
         }
 
         public void SetDefaultPort(string port)
         {
-            
+
         }
     }
 }
