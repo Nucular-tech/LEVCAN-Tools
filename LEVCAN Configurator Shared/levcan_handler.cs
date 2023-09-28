@@ -7,8 +7,9 @@ namespace LEVCAN_Configurator_Shared
 {
     public enum CANDevice
     {
-        Nucular_USB2CAN,
+        Candle_USB,
         PCAN_USB,
+        Nucular_USB2CAN,
         Null
     }
 
@@ -135,6 +136,9 @@ namespace LEVCAN_Configurator_Shared
                     break;
                 case CANDevice.PCAN_USB:
                     icanPort = new Pcanusb(Node);
+                    break;
+                case CANDevice.Candle_USB:
+                    icanPort = new CandleUSB(Node);
                     break;
             }
             icanPort.Open();

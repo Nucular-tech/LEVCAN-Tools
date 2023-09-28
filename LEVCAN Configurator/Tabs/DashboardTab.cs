@@ -39,6 +39,7 @@ namespace LEVCAN_Configurator.Tabs
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellMinMax, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_CellMinMax_t)));
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellsV, ProcessMessage, LC_ObjectAttributes.Writable, -194)); //up to 96 cells
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellBalance, ProcessMessage, LC_ObjectAttributes.Writable, -32));
+            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_ActiveFunctions, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_ActiveFunctions_t)));
             barknob = new Knob(ImGuiDataType.Float, ImGuiKnobVariant.WiperOnly, 110, ImGuiKnobFlags.BottomTitle | ImGuiKnobFlags.NoInput | ImGuiKnobFlags.NoHover | ImGuiKnobFlags.CenterValue, 0.6f, 0.7f);
 
             if (ImGui.GetIO().Fonts.Fonts.Size > 1)
@@ -80,6 +81,9 @@ namespace LEVCAN_Configurator.Tabs
 
                 case (ushort)LC_Objects_Std.LC_Obj_CellMinMax:
                     deviceinfo.CellMinMax = (LC_Obj_CellMinMax_t)data; break;
+
+                case (ushort)LC_Objects_Std.LC_Obj_ActiveFunctions:
+                    deviceinfo.ActiveFunc = (LC_Obj_ActiveFunctions_t)data; break;
 
                 case (ushort)LC_Objects_Std.LC_Obj_CellsV:
                     byte[] databytes = (byte[])data;
@@ -152,7 +156,6 @@ namespace LEVCAN_Configurator.Tabs
         }
 
         float testv = 40;
-
         void DrawControllerWindow(LCRemoteNode remote, DeviceInfo info)
         {
             ImGui.SetNextWindowPos(positionOffset, ImGuiCond.FirstUseEver);
@@ -160,6 +163,73 @@ namespace LEVCAN_Configurator.Tabs
             ImGui.Begin(remote.ToString() + $"###IDwindow{remote.ShortName.NodeID}", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
             ClampBorder();
             //Controller area
+            //Icons
+            var speed = ((int)info.ActiveFunc.Functions & (int)LC_Obj_Buttons_Bt.Speed_Mask) >> (int)LC_Obj_Buttons_Bt.Speed_Offset;
+            for (int i = 0; i < 4; i++)
+            {
+                if (speed != i)
+                    ImGui.BeginDisabled();
+                if (i == 0)
+                    ImGui.SmallButton("N");
+                else
+                    ImGui.SmallButton($"S{i}");
+
+                if (speed != i)
+                    ImGui.EndDisabled();
+                ImGui.SameLine();
+            }
+            bool hasflag = false; 
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.Brake)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("BK");
+            if (!hasflag)
+                ImGui.EndDisabled();
+            ImGui.SameLine();
+
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.EBrakeLimited)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("!BK!");
+            if (!hasflag)
+                ImGui.EndDisabled();
+            ImGui.SameLine();
+
+
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.Cruise)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("CR");
+            if (!hasflag)
+                ImGui.EndDisabled();
+
+            //NEXT LINE
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.ConverterMode)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("DC-DC");
+            if (!hasflag)
+                ImGui.EndDisabled();
+            ImGui.SameLine();
+
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.MotorFail)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("MOTOR");
+            if (!hasflag)
+                ImGui.EndDisabled();
+            ImGui.SameLine();
+
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.ControllerFail)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("CONTR");
+            if (!hasflag)
+                ImGui.EndDisabled();
+            ImGui.SameLine();
+
+            if (!(hasflag = info.ActiveFunc.Functions.HasFlag(LC_Obj_ActiveFunctions_e.CruiseReady)))
+                ImGui.BeginDisabled();
+            ImGui.SmallButton("CR-RDY");
+            if (!hasflag)
+                ImGui.EndDisabled();
+
+            ImGui.Separator();
+            //Voltage and currents
             ImGui.PushFont(bigNumberFont);
             ImGui.Text($"{info.DCSupply.Voltage / 1000.0f:0.00}V");
             ImGui.SameLine();
@@ -191,6 +261,7 @@ namespace LEVCAN_Configurator.Tabs
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_InternalVoltage);
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_Temperature);
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_RPM);
+                Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_ActiveFunctions);
             }
         }
 
@@ -327,6 +398,7 @@ namespace LEVCAN_Configurator.Tabs
         public LC_Obj_Temperature_t Temp;
         public LC_Obj_RPM_t RPMSpeed;
         public LC_Obj_CellMinMax_t CellMinMax;
+        public LC_Obj_ActiveFunctions_t ActiveFunc;
         public float[] CellsV_f = new float[1];
         public short[] CellV
         {

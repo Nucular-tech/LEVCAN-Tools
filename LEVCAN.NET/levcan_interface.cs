@@ -12,6 +12,9 @@ namespace LEVCAN
         [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
         public static extern void lib_ReceiveHandler(IntPtr node, uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 2)] uint[] data, byte length);
 
+        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
+        public static extern void lib_ReceiveHandler(IntPtr node, uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 8)] byte[] data, byte length);
+
         [DllImport("LEVCANlib", EntryPoint = "LC_Set_SendCallback", CharSet = CharSet.Ansi)]
         private static extern void lib_setSendCallback(SendCallback callback);
 

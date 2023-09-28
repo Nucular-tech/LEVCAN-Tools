@@ -16,7 +16,7 @@ namespace LEVCAN_Configurator
     internal class SettingsTab : IMGUI_TabInterface
     {
         //Check CANDevice
-        string[] devices = { "Nucular USB2CAN", "PCAN USB" };
+        string[] devices = { "CandleLight USB", "PCAN USB", "Nucular USB2CAN" };
         Vector2 left_settings_pane_vec = new Vector2(400, 0);
         FolderBrowserDialog fsfolder = new FolderBrowserDialog();
         bool cliceddebug = false;
@@ -44,7 +44,7 @@ namespace LEVCAN_Configurator
             {
                 ImGui.BeginChild("left pane", left_settings_pane_vec, false);
                 ImGui.PushItemWidth(itemssize);
-                
+
                 if (ImGui.Combo("Connection select", ref connectionIndex, devices, devices.Length))
                 {
                     Lev.DeviceSelect((CANDevice)connectionIndex);
@@ -114,7 +114,7 @@ namespace LEVCAN_Configurator
                     ImGui.Text("Designed by:");
                     if (ImGui.ImageButton("Website", logo, new Vector2(300, 87)))
                     {
-                        var psi = new System.Diagnostics.ProcessStartInfo() { FileName = "https://nucular.tech" , UseShellExecute = true };
+                        var psi = new System.Diagnostics.ProcessStartInfo() { FileName = "https://nucular.tech", UseShellExecute = true };
                         System.Diagnostics.Process.Start(psi);
                     }
                 }

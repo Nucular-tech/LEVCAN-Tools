@@ -193,6 +193,8 @@ namespace LEVCAN
         Speed_1 = 1 << 4,
         Speed_2 = 2 << 4,
         Speed_3 = 3 << 4,
+        Speed_Mask = 7 << 4,
+        Speed_Offset = 4,
         Cruise = 1 << 7 //7
     }
 
@@ -231,14 +233,14 @@ namespace LEVCAN
     [Flags]
     public enum LC_Obj_ActiveFunctions_e
     {
-        Enable = 1 << 1,
-        Lock = 1 << 2,
-        Throttle = 1 << 3,
-        Brake = 1 << 4,
+        Enable = 1 << 0,
+        Lock = 1 << 1,
+        Throttle = 1 << 2,
+        Brake = 1 << 3,
         Speed_N = 0,
-        Speed_1 = 1 << 5,
-        Speed_2 = 2 << 5,
-        Speed_3 = 3 << 5,
+        Speed_1 = 1 << 4,
+        Speed_2 = 2 << 4,
+        Speed_3 = 3 << 4,
         Reverse = 1 << 7,
         Cruise = 1 << 8,
         TurnRight = 1 << 9,
@@ -257,10 +259,13 @@ namespace LEVCAN
         BatteryWarning = 1 << 22,
         BatteryFail = 1 << 23,
         EBrakeLimited = 1 << 24,
-        EABS = 1 << 25,
-        Service = 1 << 26,
-        FanActive = 1 << 27,
-        HeaterActive = 1 << 28,
+        EABS = 1 << 25, 
+        EASR = 1 << 26,
+        ESP = 1 << 27,
+        CruiseReady = 1 << 28,
+        Service = 1 << 29,
+        FanActive = 1 << 30,
+        BatteryHeater = 1 << 31,
     };
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]

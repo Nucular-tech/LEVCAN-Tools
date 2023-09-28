@@ -202,7 +202,12 @@ namespace LEVCAN_Configurator
                                 fl = ImGuiComboFlags.NoArrowButton;
                             }
                             //custom combo box with only visible parameters
-                            if (ImGui.BeginCombo(entry.Name, entry.TextDataAsArray[item], fl))
+                            string preview;
+                            if (item >= entry.TextDataAsArray.Length)
+                                preview = item.ToString();
+                            else
+                                preview = entry.TextDataAsArray[item];
+                            if (ImGui.BeginCombo(entry.Name, preview, fl))
                             {
                                 //show visible range
                                 for (var ci = 0; ci < desc.Size && ci < entry.TextDataAsArray.Length; ci++)
@@ -221,7 +226,7 @@ namespace LEVCAN_Configurator
                                 }
                                 ImGui.EndCombo();
                             }
-                            ShowContextMenu(entry.Name + " = " + entry.TextDataAsArray[item]);
+                            ShowContextMenu(entry.Name + " = " + preview);
                         }
                         break;
 
