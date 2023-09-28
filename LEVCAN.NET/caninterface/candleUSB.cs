@@ -100,9 +100,6 @@ namespace LEVCAN
             {
                 if (idFilter[i] == headerPacked.Target)
                 {
-                    //avoid receiving own messages, some weird bug
-                    if (headerPacked.Source == _node.ShortName.NodeID)
-                        continue;
                     filterPassed = true;
                     break;
                 }
