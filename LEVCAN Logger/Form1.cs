@@ -269,6 +269,7 @@ namespace ICDIBasic
         /// </summary>
         private void InitializeBasicComponents()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             // Creates the list for received messages
             //
             m_LastMsgsList = new System.Collections.ArrayList();
@@ -1991,6 +1992,50 @@ namespace ICDIBasic
                 btStartStop.BackColor = SystemColors.ControlDark;
             }
             logActive = !logActive;
+        }
+
+        private void textBoxIDHEX_TextChanged(object sender, EventArgs e)
+        {
+            DecodeHEXid(textBoxIDHEX.Text);
+        }
+
+        void DecodeHEXid(string textAsHex)
+        {
+            uint? id = null;
+            try
+            {
+                id = uint.Parse(textAsHex.Trim().Replace(" ", "").Replace("0x", ""),System.Globalization.NumberStyles.HexNumber);
+            }
+            catch { }
+            if (id == null)
+                return;
+
+            textBoxFromID.Text = (id & 0x7F).ToString();
+            id=id >> 7;
+            textBoxToID.Text = (id & 0x7F).ToString();
+            id = id >> 7;
+            uint msgid = (uint)(id & 0x3FF);
+            textBoxMessageID.Text = msgid.ToString();
+            id = id >> 10;
+            checkBoxEOM.Checked = (id & 1) == 1;
+            id = id >> 1;
+            checkBoxParity.Checked = (id & 1) == 1;
+            id = id >> 1;
+            checkBoxRTS.Checked = (id & 1) == 1;
+            id = id >> 1;
+            textBoxPriority.Text = (id).ToString();
+
+            if (Enum.IsDefined(typeof(LC_SystemMessage), (int)msgid))
+            {
+                LC_SystemMessage enumid = (LC_SystemMessage)msgid;
+                textBoxMessageName.Text =  enumid.ToString();
+            }
+            if (Enum.IsDefined(typeof(LC_Objects_Std), (int)msgid))
+            {
+                LC_Objects_Std enumid = (LC_Objects_Std)msgid;
+                textBoxMessageName.Text = enumid.ToString();
+            }
+           
         }
     }
 }

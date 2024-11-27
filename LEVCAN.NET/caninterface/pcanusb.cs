@@ -22,7 +22,7 @@ namespace LEVCAN
         byte[] idFilter;
         private System.Threading.AutoResetEvent m_ReceiveEvent;
         private TPCANHandle m_PcanHandle;
-
+        TPCANBaudrate baudrate = TPCANBaudrate.PCAN_BAUD_1M;
         public event EventHandler OnDisconnected;
         public event EventHandler OnConnected;
 
@@ -34,8 +34,9 @@ namespace LEVCAN
         //reset busheavy by timer
         Timer heavyTim = new Timer(TimeSpan.FromSeconds(1));
 
-        public Pcanusb(LC_Node node)
+        public Pcanusb(LC_Node node, int baudrate)
         {
+            SetBaudrate(baudrate);   
             idFilter = new byte[3];
             for (int i = 0; i < idFilter.Length; i++)
             {
@@ -164,7 +165,6 @@ namespace LEVCAN
             return data;
         }
 
-
         private LC_Return SendCallback(uint header, uint[] data, byte length)
         {
             LC_HeaderPacked headerPacked = new LC_HeaderPacked(header);
@@ -211,8 +211,6 @@ namespace LEVCAN
             return LC_Return.BufferFull;
         }
 
-
-
         private LC_Return FilterCallback(uint reg, uint mask, byte index)
         {
             LC_HeaderPacked headerPacked = new LC_HeaderPacked(reg);
@@ -235,7 +233,7 @@ namespace LEVCAN
             LC_Interface.ConfigureFilters(_node);
 
             TPCANStatus stsResult;
-            stsResult = PCANBasic.Initialize(m_PcanHandle, TPCANBaudrate.PCAN_BAUD_1M);
+            stsResult = PCANBasic.Initialize(m_PcanHandle, baudrate);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return;
 
@@ -263,6 +261,55 @@ namespace LEVCAN
         public void SetDefaultPort(string port)
         {
 
+        }
+
+        public void SetBaudrate(int speed)
+        {
+            switch (speed)
+            {
+                case 1000000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_1M;
+                    break;
+                case 800000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_800K;
+                    break;
+                case 500000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_500K;
+                    break;
+                case 250000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_250K;
+                    break;
+                case 125000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_125K;
+                    break;
+                case 100000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_100K;
+                    break;
+                case 95238:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_95K;
+                    break;
+                case 83333:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_83K;
+                    break;
+                case 50000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_50K;
+                    break;
+                case 47619:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_47K;
+                    break;
+                case 33333:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_33K;
+                    break;
+                case 20000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_20K;
+                    break;
+                case 10000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_10K;
+                    break;
+                case 5000:
+                    baudrate = TPCANBaudrate.PCAN_BAUD_5K;
+                    break;
+            }
         }
     }
 }

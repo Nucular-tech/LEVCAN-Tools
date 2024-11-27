@@ -185,6 +185,22 @@
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.label9 = new System.Windows.Forms.Label();
             this.txtbFilters = new System.Windows.Forms.TextBox();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.textBoxIDHEX = new System.Windows.Forms.TextBox();
+            this.groupBox8 = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.textBoxMessageID = new System.Windows.Forms.TextBox();
+            this.label14 = new System.Windows.Forms.Label();
+            this.textBoxFromID = new System.Windows.Forms.TextBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.textBoxMessageName = new System.Windows.Forms.TextBox();
+            this.textBoxToID = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
+            this.checkBoxRTS = new System.Windows.Forms.CheckBox();
+            this.checkBoxParity = new System.Windows.Forms.CheckBox();
+            this.checkBoxEOM = new System.Windows.Forms.CheckBox();
+            this.textBoxPriority = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudDeviceIdOrDelay)).BeginInit();
@@ -200,6 +216,8 @@
             this.tabPage1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.groupBox7.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            this.groupBox8.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -2057,6 +2075,7 @@
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -2272,6 +2291,169 @@
             this.txtbFilters.TabIndex = 0;
             this.txtbFilters.Text = "919\r\n782\r\n776\r\n774\r\n775\r\n770\r\n769\r\n785\r\n791\r\n795\r\n783\r\n773\r\n918\r\n896";
             // 
+            // tabPage4
+            // 
+            this.tabPage4.Controls.Add(this.groupBox8);
+            this.tabPage4.ForeColor = System.Drawing.SystemColors.Control;
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Name = "tabPage4";
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage4.Size = new System.Drawing.Size(763, 732);
+            this.tabPage4.TabIndex = 3;
+            this.tabPage4.Text = "Decode ID";
+            this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // textBoxIDHEX
+            // 
+            this.textBoxIDHEX.Location = new System.Drawing.Point(76, 19);
+            this.textBoxIDHEX.Name = "textBoxIDHEX";
+            this.textBoxIDHEX.Size = new System.Drawing.Size(100, 20);
+            this.textBoxIDHEX.TabIndex = 0;
+            this.textBoxIDHEX.TextChanged += new System.EventHandler(this.textBoxIDHEX_TextChanged);
+            // 
+            // groupBox8
+            // 
+            this.groupBox8.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox8.Controls.Add(this.checkBoxEOM);
+            this.groupBox8.Controls.Add(this.checkBoxParity);
+            this.groupBox8.Controls.Add(this.checkBoxRTS);
+            this.groupBox8.Controls.Add(this.label17);
+            this.groupBox8.Controls.Add(this.label16);
+            this.groupBox8.Controls.Add(this.label15);
+            this.groupBox8.Controls.Add(this.label14);
+            this.groupBox8.Controls.Add(this.label11);
+            this.groupBox8.Controls.Add(this.textBoxPriority);
+            this.groupBox8.Controls.Add(this.textBoxToID);
+            this.groupBox8.Controls.Add(this.textBoxFromID);
+            this.groupBox8.Controls.Add(this.textBoxMessageName);
+            this.groupBox8.Controls.Add(this.textBoxMessageID);
+            this.groupBox8.Controls.Add(this.textBoxIDHEX);
+            this.groupBox8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBox8.Location = new System.Drawing.Point(3, 3);
+            this.groupBox8.Name = "groupBox8";
+            this.groupBox8.Size = new System.Drawing.Size(757, 726);
+            this.groupBox8.TabIndex = 0;
+            this.groupBox8.TabStop = false;
+            this.groupBox8.Text = "Decoder";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label11.Location = new System.Drawing.Point(6, 22);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(43, 13);
+            this.label11.TabIndex = 1;
+            this.label11.Text = "ID HEX";
+            // 
+            // textBoxMessageID
+            // 
+            this.textBoxMessageID.Location = new System.Drawing.Point(76, 45);
+            this.textBoxMessageID.Name = "textBoxMessageID";
+            this.textBoxMessageID.Size = new System.Drawing.Size(100, 20);
+            this.textBoxMessageID.TabIndex = 0;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label14.Location = new System.Drawing.Point(6, 48);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(64, 13);
+            this.label14.TabIndex = 1;
+            this.label14.Text = "Message ID";
+            // 
+            // textBoxFromID
+            // 
+            this.textBoxFromID.Location = new System.Drawing.Point(76, 71);
+            this.textBoxFromID.Name = "textBoxFromID";
+            this.textBoxFromID.Size = new System.Drawing.Size(100, 20);
+            this.textBoxFromID.TabIndex = 0;
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label15.Location = new System.Drawing.Point(6, 74);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(30, 13);
+            this.label15.TabIndex = 1;
+            this.label15.Text = "From";
+            // 
+            // textBoxMessageName
+            // 
+            this.textBoxMessageName.Location = new System.Drawing.Point(182, 45);
+            this.textBoxMessageName.Name = "textBoxMessageName";
+            this.textBoxMessageName.Size = new System.Drawing.Size(180, 20);
+            this.textBoxMessageName.TabIndex = 0;
+            // 
+            // textBoxToID
+            // 
+            this.textBoxToID.Location = new System.Drawing.Point(76, 97);
+            this.textBoxToID.Name = "textBoxToID";
+            this.textBoxToID.Size = new System.Drawing.Size(100, 20);
+            this.textBoxToID.TabIndex = 0;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label16.Location = new System.Drawing.Point(6, 100);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(20, 13);
+            this.label16.TabIndex = 1;
+            this.label16.Text = "To";
+            // 
+            // checkBoxRTS
+            // 
+            this.checkBoxRTS.AutoSize = true;
+            this.checkBoxRTS.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.checkBoxRTS.Location = new System.Drawing.Point(76, 149);
+            this.checkBoxRTS.Name = "checkBoxRTS";
+            this.checkBoxRTS.Size = new System.Drawing.Size(107, 17);
+            this.checkBoxRTS.TabIndex = 2;
+            this.checkBoxRTS.Text = "Request to  send";
+            this.checkBoxRTS.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxParity
+            // 
+            this.checkBoxParity.AutoSize = true;
+            this.checkBoxParity.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.checkBoxParity.Location = new System.Drawing.Point(76, 172);
+            this.checkBoxParity.Name = "checkBoxParity";
+            this.checkBoxParity.Size = new System.Drawing.Size(52, 17);
+            this.checkBoxParity.TabIndex = 2;
+            this.checkBoxParity.Text = "Parity";
+            this.checkBoxParity.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxEOM
+            // 
+            this.checkBoxEOM.AutoSize = true;
+            this.checkBoxEOM.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.checkBoxEOM.Location = new System.Drawing.Point(76, 195);
+            this.checkBoxEOM.Name = "checkBoxEOM";
+            this.checkBoxEOM.Size = new System.Drawing.Size(102, 17);
+            this.checkBoxEOM.TabIndex = 2;
+            this.checkBoxEOM.Text = "End of message";
+            this.checkBoxEOM.UseVisualStyleBackColor = true;
+            // 
+            // textBoxPriority
+            // 
+            this.textBoxPriority.Location = new System.Drawing.Point(76, 123);
+            this.textBoxPriority.Name = "textBoxPriority";
+            this.textBoxPriority.Size = new System.Drawing.Size(100, 20);
+            this.textBoxPriority.TabIndex = 0;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label17.Location = new System.Drawing.Point(6, 126);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(38, 13);
+            this.label17.TabIndex = 1;
+            this.label17.Text = "Priority";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2304,6 +2486,9 @@
             this.tabPage3.ResumeLayout(false);
             this.groupBox7.ResumeLayout(false);
             this.groupBox7.PerformLayout();
+            this.tabPage4.ResumeLayout(false);
+            this.groupBox8.ResumeLayout(false);
+            this.groupBox8.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -2466,6 +2651,22 @@
         private System.Windows.Forms.GroupBox groupBox7;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox txtbFilters;
+        private System.Windows.Forms.TabPage tabPage4;
+        private System.Windows.Forms.GroupBox groupBox8;
+        private System.Windows.Forms.CheckBox checkBoxEOM;
+        private System.Windows.Forms.CheckBox checkBoxParity;
+        private System.Windows.Forms.CheckBox checkBoxRTS;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox textBoxPriority;
+        private System.Windows.Forms.TextBox textBoxToID;
+        private System.Windows.Forms.TextBox textBoxFromID;
+        private System.Windows.Forms.TextBox textBoxMessageName;
+        private System.Windows.Forms.TextBox textBoxMessageID;
+        private System.Windows.Forms.TextBox textBoxIDHEX;
     }
 }
 

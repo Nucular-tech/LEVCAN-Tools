@@ -21,6 +21,7 @@ namespace LEVCAN
         void Open();
         void Close();
         void SetDefaultPort(string port);
+        void SetBaudrate(int baudrate);
     }
 
     class StructHelper

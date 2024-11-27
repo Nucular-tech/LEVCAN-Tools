@@ -54,8 +54,7 @@ extern int print_log(const char* format, ...);
 
 //define to be able to configure your device over levcan
 //#define LEVCAN_PARAMETERS
-//define to be able print and parse your parameters
-//#define LEVCAN_PARAMETERS_PARSING
+#define LEVCAN_PARAMETERS_SERVER
 //Float-point support for parameters
 #define LEVCAN_USE_FLOAT
 #define LEVCAN_USE_INT64

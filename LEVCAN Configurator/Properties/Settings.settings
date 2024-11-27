@@ -21,5 +21,8 @@
 
 </Value>
     </Setting>
+    <Setting Name="Speed" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1000000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

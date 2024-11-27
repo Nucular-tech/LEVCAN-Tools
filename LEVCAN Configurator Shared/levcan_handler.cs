@@ -24,15 +24,15 @@ namespace LEVCAN_Configurator_Shared
         public delegate void UpdateEvent(LC_Event_t evnt);
         public UpdateEvent UpdateEventHandler;
         public LC_FileServer FileServer;
-
-        public LevcanHandler(CANDevice cdevice = CANDevice.Nucular_USB2CAN)
+        int DeviceBaudrate;
+        public LevcanHandler(int baudrate, CANDevice cdevice = CANDevice.Nucular_USB2CAN)
         {
-            //objects[0] = new LC_Object((ushort)LC_SystemMessage.NodeName, new LC_Obj_ThrottleV_t(), LC_ObjectAttributes.Writable);
+            //parse names
             var obj = new LC_ObjectString((ushort)LC_SystemMessage.NodeName, null, 128, LC_ObjectAttributes.Writable);
             obj.OnChange += nodename;
             lc_objects.Add(obj);
-
             //init node and load DLL
+            DeviceBaudrate = baudrate;
             Node = new LC_Node(65);
             //hardware
             DeviceSelect(cdevice);
@@ -132,16 +132,22 @@ namespace LEVCAN_Configurator_Shared
             {
                 case CANDevice.Nucular_USB2CAN:
                     //icanPort = new socketcand(node); //works as shit
-                    icanPort = new NucularUSB2CAN(Node);
+                    icanPort = new NucularUSB2CAN(Node, DeviceBaudrate);
                     break;
                 case CANDevice.PCAN_USB:
-                    icanPort = new Pcanusb(Node);
+                    icanPort = new Pcanusb(Node, DeviceBaudrate);
                     break;
                 case CANDevice.Candle_USB:
-                    icanPort = new CandleUSB(Node);
+                    icanPort = new CandleUSB(Node, DeviceBaudrate);
                     break;
             }
             icanPort.Open();
+        }
+
+        public void DeviceSetBaudrate(int baudrate)
+        {
+            this.DeviceBaudrate = baudrate;
+            icanPort.SetBaudrate(baudrate);
         }
 
         public LC_ParamClient GetParametersClient(LCRemoteNode selected)
@@ -167,6 +173,7 @@ namespace LEVCAN_Configurator_Shared
             lc_objects.Add(lcobj);
             Node.Objects = lc_objects.ToArray();
         }
+
     }
 
     public class LCRemoteNode

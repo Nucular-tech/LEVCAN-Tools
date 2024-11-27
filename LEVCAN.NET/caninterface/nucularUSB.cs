@@ -116,6 +116,7 @@ namespace LEVCAN
         List<byte> buffer = new List<byte>();
         byte[] portbuff;
         bool portTxFull = false;
+        int AdapterBaudrate = 1000000;
 
         public Stopwatch swGlb = new Stopwatch();
         public TimeSpan elapsed;
@@ -140,10 +141,11 @@ namespace LEVCAN
         public int Errors { get { return errors; } set { errors = value; } }
         public TimeSpan MaxRequestDelay { get { return maxel; } set { maxel = value; } }
 
-        public NucularUSB2CAN(LC_Node node)
+        public NucularUSB2CAN(LC_Node node, int baudrate)
         {
             _node = node;
             portbuff = new byte[cdc_packsz];
+            AdapterBaudrate = baudrate;
         }
 
         public void Open()
@@ -499,11 +501,15 @@ namespace LEVCAN
 
             //Init can bus
             int index = (int)usbFPos.Data;
+            int speedByBytes = AdapterBaudrate;
             frame[index++] = (byte)usbCommand.InitCAN;
-            frame[index++] = 0x40; //000F4240 = 1mhz
-            frame[index++] = 0x42;
-            frame[index++] = 0x0F;
-            frame[index++] = 0x00;
+            frame[index++] = (byte)(speedByBytes & 0xFF); //000F4240 = 1mhz
+            speedByBytes = speedByBytes >> 8;
+            frame[index++] = (byte)(speedByBytes & 0xFF); 
+            speedByBytes = speedByBytes >> 8;
+            frame[index++] = (byte)(speedByBytes & 0xFF); 
+            speedByBytes = speedByBytes >> 8;
+            frame[index++] = (byte)(speedByBytes & 0xFF);
             frame[index++] = 0x00;//loopback
             frame[index++] = 0x00;//silent
             frame[(int)usbFPos.CRC_ITU] = CalculatorCRC.Calculate_CRC8_ITU(frame, 15);
@@ -514,6 +520,11 @@ namespace LEVCAN
             stream.Write(frame, 0, frame.Length);
 
             return stream;
+        }
+
+        public void SetBaudrate(int speed)
+        {
+            AdapterBaudrate = speed;
         }
     }
 }

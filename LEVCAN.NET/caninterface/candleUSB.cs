@@ -24,6 +24,7 @@ namespace LEVCAN
 
         LC_Node _node;
         byte sentIndex;
+        int AdapterBaudrate;
 
         public event EventHandler OnDisconnected;
         public event EventHandler OnConnected;
@@ -39,8 +40,9 @@ namespace LEVCAN
 
         Timer deviceDelayTim = new Timer(TimeSpan.FromSeconds(1));
 
-        public CandleUSB(LC_Node node)
+        public CandleUSB(LC_Node node, int baudrate)
         {
+            AdapterBaudrate = baudrate;
             idFilter = new byte[3];
             for (int i = 0; i < idFilter.Length; i++)
             {
@@ -72,7 +74,7 @@ namespace LEVCAN
                 canDevice = devices[0];
                 canDevice.Open();
                 canChannel = canDevice.Channels[0];
-                canChannel.Start(1000000);
+                canChannel.Start(AdapterBaudrate);
                 canChannel.OnReceive += CanChannel_OnReceive;
                 LC_Interface.ConfigureFilters(_node);
             }
@@ -186,5 +188,9 @@ namespace LEVCAN
 
         }
 
+        public void SetBaudrate(int baudrate)
+        {
+            AdapterBaudrate = baudrate;
+        }
     }
 }

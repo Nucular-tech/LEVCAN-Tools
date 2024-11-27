@@ -71,6 +71,24 @@ namespace LEVCAN
             string str = encoding.GetString(bytes);
             return str;
         }
+
+        public static string ByteArrayToString(byte[] ba)
+        {
+            return ByteArrayToString(ba, ba.Length);
+        }
+
+        public static string ByteArrayToString(byte[] ba, int length, bool addspaces = false)
+        {
+            StringBuilder hex = new StringBuilder(length * (addspaces ? 3 : 2));
+            for (int b = 0; b < length; b++)
+            {
+                if (addspaces)
+                    hex.AppendFormat("{0:X2} ", ba[b]);
+                else
+                    hex.AppendFormat("{0:X2}", ba[b]);
+            }
+            return hex.ToString();
+        }
     }
 
     //https://stackoverflow.com/questions/17339928/c-sharp-how-to-convert-object-to-intptr-and-back

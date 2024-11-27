@@ -29,32 +29,6 @@ namespace LEVCAN
         Deleted
     };
 
-    public enum LC_SystemMessage
-    {
-        AddressClaimed = 0x380,
-        ComandedAddress,
-        NodeName = 0x388,
-        DeviceName,
-        VendorName,
-        VendorCode,
-        HWVersion,
-        SWVersion,
-        SerialNumber,
-        Parameters,
-        Variables,
-        Events,
-        Trace,
-        DateTime,
-        SWUpdate,
-        Shutdown,
-        FileServer,
-        FileClient,
-        SaveData,
-        End,
-        MaxMessageID = 1023
-    };
-
-
     public enum LC_NodeState
     {
         Disabled, NetworkDiscovery, WaitingClaim, Online

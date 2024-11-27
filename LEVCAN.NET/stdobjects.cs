@@ -78,8 +78,18 @@ namespace LEVCAN
         LC_Obj_DCLimitIFactor,
         LC_Obj_DCLimitIValue,
         LC_Obj_DCLimitVValue,
-        LC_Obj_DateTime,
-        LC_Obj_DateTimeSet,
+        LC_Obj_FOCstateV,
+        LC_Obj_FOCstateI,
+        LC_Obj_FOCreqest,
+        LC_Obj_AhUsed,
+        LC_Obj_AhStored,
+        LC_Obj_CFactor_Internal,
+        LC_Obj_CFactorInt_Internal,
+        LC_Obj_SelectedPowerMode,
+        LC_Obj_PowerModeIndex,
+        LC_Obj_BatteryCurrents,
+        LC_Obj_BatteryVoltages,
+        LC_Obj_ControlDirection,
     };
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
@@ -259,7 +269,7 @@ namespace LEVCAN
         BatteryWarning = 1 << 22,
         BatteryFail = 1 << 23,
         EBrakeLimited = 1 << 24,
-        EABS = 1 << 25, 
+        EABS = 1 << 25,
         EASR = 1 << 26,
         ESP = 1 << 27,
         CruiseReady = 1 << 28,
@@ -353,30 +363,61 @@ namespace LEVCAN
     };
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-    public struct LC_Obj_DateTime_t
+    public struct LC_Obj_FOCstateV_t
     {
-        public byte Hour; //24H
-        public byte Minute;
-        public byte Second;
-        public byte WeekDay; //0=Monday ... 6=Sunday
-        public byte Date;
-        public byte Month;
-        public ushort Year;
+        public float Vd;
+        public float Vq;
+    };
 
-        public LC_Obj_DateTime_t(DateTime time)
-        {
-            Year = (ushort)time.Year;
-            Month = (byte)time.Month;
-            Date = (byte)time.Day;
-            WeekDay = (byte)(((int)time.DayOfWeek - 1 < 0) ? 6 : (int)time.DayOfWeek - 1);
-            Second = (byte)time.Second;
-            Minute = (byte)time.Minute;
-            Hour = (byte)time.Hour;
-        }
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_FOCstateI_t
+    {
+        public float Iq;
+        public float Id;
+    };
 
-        public DateTime ToDateTime()
-        {
-            return new DateTime(Year, Month, Date, Hour, Minute, Second);
-        }
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_FOCrequest_t
+    {
+        public float Iq_request;
+        public float Id_request;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_AhUsed_t
+    {
+        public int mAhUsed;
+        public int mAhUsedFromEn;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_AhStored_t
+    {
+        public int mAhStored;
+        public int mAhTotalStorage;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_PowerMode_t
+    {
+        public ushort PhaseI;
+        public ushort BatteryI; //factor 32767 = 1.0f
+        public ushort Power; //factor 32767 = 1.0f
+        public byte Speed; //number of bits
+        public sbyte Index; //number of bits
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_BatteryCurrents_t
+    {
+        public uint ChargeI;
+        public uint DischargeI;
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    public struct LC_Obj_BatteryVoltages_t
+    {
+        public uint MinV;
+        public uint MaxV;
     };
 }

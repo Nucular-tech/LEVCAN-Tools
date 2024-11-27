@@ -13,6 +13,7 @@ using System.ComponentModel.Composition.Hosting;
 using LEVCAN_Configurator_Shared;
 using System.Drawing;
 using LEVCAN_Configurator.Helpers;
+using LEVCAN;
 
 namespace LEVCAN_Configurator
 {
@@ -24,6 +25,7 @@ namespace LEVCAN_Configurator
         private static ImGuiController _controller;
         // private static MemoryEditor _memoryEditor;
         LevcanHandler Lev;
+        LC_Sys_DateTime_t dateTime;
         // UI state
         private static Vector3 _clearColor = new Vector3(0.45f, 0.55f, 0.6f);
 
@@ -55,7 +57,7 @@ namespace LEVCAN_Configurator
             ApplyStyle();
 
             settings = Properties.Settings.Default;
-            Lev = new LevcanHandler((CANDevice)settings.Connection);
+            Lev = new LevcanHandler(settings.Speed, (CANDevice)settings.Connection);
             Lev.FileServer.SavePath = settings.FSpath;
 
             List<IMGUI_TabInterface> tabsListInit = new List<IMGUI_TabInterface>();
@@ -182,6 +184,12 @@ namespace LEVCAN_Configurator
                 status = Lev.icanPort.Status;
                 if (status == null)
                     status = "Disconnected";
+                //Send date and time
+                if (Lev.Node.GetActiveNodes().Length > 0)
+                {
+                    dateTime = new LC_Sys_DateTime_t(DateTime.Now);
+                    Lev.Node.SendData(CastingHelper.CastToArray(dateTime), (byte)LC_Address.Broadcast, (ushort)LC_SystemMessage.DateTime);
+                }
             }
             ImGui.Text($"{status} | TX/RX: {txrx_count} | Application average {stopwatch_ms:0.##} ms/frame ({framerate:0.#} FPS) | ");
             bottom_bar_offset = ImGui.GetCursorPosY() - saved_cursorY;
