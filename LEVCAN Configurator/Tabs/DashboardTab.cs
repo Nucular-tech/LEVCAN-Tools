@@ -250,6 +250,9 @@ namespace LEVCAN_Configurator.Tabs
             barknob.DrawValueKnob("Motor", $"{info.Temp.ExternalTemp}°C", (float)info.Temp.ExternalTemp / (float)150);
             ImGui.SameLine();
             barknob.DrawValueKnob("Motor I", $"{info.MotorI:0.0}A", info.MotoriRate);
+            ImGui.Separator();
+            ImGui.Text($"CPU: {info.Temp.ExtraTemp1 / 10.0f:0.0} °C");
+            ImGui.Text($"CAP: {info.Temp.ExtraTemp2 / 10.0f:0.0} °C");
 
             NewWindowOffset();
             ImGui.End();

@@ -318,6 +318,10 @@ namespace LEVCAN_Configurator
                             {
                                 decitext = entry.TextData.Replace("%s", decitext);
                             }
+                            if (decitext.Contains("%%"))
+                            {
+                                decitext = decitext.Replace("%%", "%");
+                            }
                             bool value_changed = false;
                             float button_size = ImGui.GetFrameHeight();
                             var styleSpacingX = ImGui.GetStyle().ItemInnerSpacing.X;
@@ -430,7 +434,7 @@ namespace LEVCAN_Configurator
             {
                 var divider = (long)Math.Pow(10, decimals);
                 long vard = value / divider;
-                long fract = value % divider;
+                long fract = Math.Abs(value % divider);
                 //vard.00fract
                 outs = vard.ToString() + "." + fract.ToString("D" + decimals.ToString());
             }
@@ -444,7 +448,7 @@ namespace LEVCAN_Configurator
         int FromDecimal(string text, LCP_Decimal32 descr)
         {
             double reslt = 0;
-            string onlynumber = new string(text.Trim().TakeWhile(c => char.IsDigit(c) || c == '.').ToArray());
+            string onlynumber = new string(text.Trim().TakeWhile(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());
             bool parsed = Double.TryParse(onlynumber, out reslt);
             if (parsed)
                 return (int)(reslt * Math.Pow(10, descr.Decimals));
