@@ -9,11 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LEVCAN Lib", "LevCan Lib\LE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN.NET", "LEVCAN.NET\LEVCAN.NET.csproj", "{E31B8ADD-A387-4FFB-8065-4BA0877E80EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Logger", "LEVCAN Logger\LEVCAN Logger.csproj", "{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN Logger", "LEVCAN Logger\LEVCAN Logger.csproj", "{0CBCC19A-D35C-493D-A04C-DE1AA7E31F0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanTestTab", "TestTabLib\CanTestTab.csproj", "{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CanTestTab", "TestTabLib\CanTestTab.csproj", "{E1B4BCD8-6B7D-4084-B772-EA03DF9BD877}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEVCAN Configurator Shared", "LEVCAN Configurator Shared\LEVCAN Configurator Shared.csproj", "{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LEVCAN Configurator Shared", "LEVCAN Configurator Shared\LEVCAN Configurator Shared.csproj", "{3BA2BDC7-CE3B-4FA7-BD0D-33E7A02BDADA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

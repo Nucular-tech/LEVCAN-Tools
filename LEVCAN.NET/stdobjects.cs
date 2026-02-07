@@ -48,8 +48,8 @@ namespace LEVCAN
     public enum LC_Objects_Std
     {
         LC_Obj_State = 0x300,
-        LC_Obj_DCSupply,
-        LC_Obj_MotorSupply,
+        LC_Obj_DCSupply,        // Controller battery power input, LC_Obj_Supply_t (positive - consumption, negative - regeneration)
+        LC_Obj_MotorSupply, 	// motor power from controller, LC_Obj_Supply_t
         LC_Obj_InternalVoltage,
         LC_Obj_Power,
         LC_Obj_Temperature,
@@ -75,21 +75,27 @@ namespace LEVCAN
         LC_Obj_AccelerometerRaw,
         LC_Obj_Accelerometer,
         LC_Obj_ControlFactorInt,
-        LC_Obj_DCLimitIFactor,
+        LC_Obj_DCLimitIFactor,  // LC_Obj_DCLimit_t
         LC_Obj_DCLimitIValue,
         LC_Obj_DCLimitVValue,
-        LC_Obj_FOCstateV,
-        LC_Obj_FOCstateI,
-        LC_Obj_FOCreqest,
-        LC_Obj_AhUsed,
-        LC_Obj_AhStored,
+        LC_Obj_FOCstateV,       // LC_Obj_FOCstateV_t
+        LC_Obj_FOCstateI,       // LC_Obj_FOCstateI_t
+        LC_Obj_FOCreqest,       // LC_Obj_FOCrequest_t
+        LC_Obj_AhUsed,          // LC_Obj_AhUsed_t
+        LC_Obj_AhStored,        // LC_Obj_AhStored_t
+        LC_Obj_BatterySupply,   // BMS or battery supply, LC_Obj_Supply_t (negative - battery discharge)
+        LC_Obj_AuxSupply,       // 12V systems or other low voltage equipment, LC_Obj_Supply_t (positive - consumption, negative - regeneration)
+        LC_Obj_ClimateSupply,   // Climate control systems supply, LC_Obj_Supply_t (positive - consumption, negative - regeneration)
+        LC_Obj_ACSupply,        // 110V/220V AC grid supply, LC_Obj_Supply_t
+        LC_Obj_ACSupply3Ph,     // 110V/220V AC grid 3 phase supply, LC_Obj_Supply3ph_t
         LC_Obj_CFactor_Internal,
         LC_Obj_CFactorInt_Internal,
-        LC_Obj_SelectedPowerMode,
-        LC_Obj_PowerModeIndex,
+        LC_Obj_SelectedPowerMode,// LC_Obj_PowerMode_t
+        LC_Obj_PowerModeIndex,  // LC_Obj_PowerMode_t
         LC_Obj_BatteryCurrents,
         LC_Obj_BatteryVoltages,
         LC_Obj_ControlDirection,
+        LC_Obj_PowerModeLimits,	// LC_Obj_PowerMode_t with maximum values. index = 0
     };
 
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]

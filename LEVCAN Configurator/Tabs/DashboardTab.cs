@@ -40,6 +40,7 @@ namespace LEVCAN_Configurator.Tabs
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellsV, ProcessMessage, LC_ObjectAttributes.Writable, -194)); //up to 96 cells
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellBalance, ProcessMessage, LC_ObjectAttributes.Writable, -32));
             Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_ActiveFunctions, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_ActiveFunctions_t)));
+            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_PowerModeIndex, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_PowerMode_t)));
             barknob = new Knob(ImGuiDataType.Float, ImGuiKnobVariant.WiperOnly, 110, ImGuiKnobFlags.BottomTitle | ImGuiKnobFlags.NoInput | ImGuiKnobFlags.NoHover | ImGuiKnobFlags.CenterValue, 0.6f, 0.7f);
 
             if (ImGui.GetIO().Fonts.Fonts.Size > 1)
@@ -95,6 +96,15 @@ namespace LEVCAN_Configurator.Tabs
                     deviceinfo.CellV = sdata;
                     break;
 
+                case (ushort)LC_Objects_Std.LC_Obj_PowerModeIndex:
+                    LC_Obj_PowerMode_t pmode = (LC_Obj_PowerMode_t)data;
+                    if (pmode.Index < 0)
+                        pmode.Index = 3;
+                    else if (pmode.Index > 2)
+                        pmode.Index = 2;
+                    else pmode.Index -= 1;
+                    deviceinfo.PowerMode[pmode.Index] = pmode;
+                    break;
                 default:
                     break;
             }
@@ -254,6 +264,14 @@ namespace LEVCAN_Configurator.Tabs
             ImGui.Text($"CPU: {info.Temp.ExtraTemp1 / 10.0f:0.0} °C");
             ImGui.Text($"CAP: {info.Temp.ExtraTemp2 / 10.0f:0.0} °C");
 
+            //Debug area
+#if DEBUG
+            ImGui.Separator();
+            ImGui.Text($"Phase 1: {info.PowerMode[0].PhaseI:0} A");
+            ImGui.Text($"Battery 1: {info.PowerMode[0].BatteryI:0} A");
+            ImGui.Text($"Power 1: {info.PowerMode[0].Power:0} W");
+            ImGui.Text($"Speed 1: {info.PowerMode[0].Speed:0} %%");
+#endif
             NewWindowOffset();
             ImGui.End();
 
@@ -265,6 +283,7 @@ namespace LEVCAN_Configurator.Tabs
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_Temperature);
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_RPM);
                 Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_ActiveFunctions);
+                Lev.Node.SendRequest(remote.ShortName.NodeID, (ushort)LC_Objects_Std.LC_Obj_PowerModeIndex);
             }
         }
 
@@ -402,6 +421,7 @@ namespace LEVCAN_Configurator.Tabs
         public LC_Obj_RPM_t RPMSpeed;
         public LC_Obj_CellMinMax_t CellMinMax;
         public LC_Obj_ActiveFunctions_t ActiveFunc;
+        public LC_Obj_PowerMode_t[] PowerMode = new LC_Obj_PowerMode_t[4];
         public float[] CellsV_f = new float[1];
         public short[] CellV
         {

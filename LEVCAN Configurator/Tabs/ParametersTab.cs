@@ -433,10 +433,10 @@ namespace LEVCAN_Configurator
             if (decimals != 0)
             {
                 var divider = (long)Math.Pow(10, decimals);
-                long vard = value / divider;
+                long whole = Math.Abs(value / divider);
                 long fract = Math.Abs(value % divider);
                 //vard.00fract
-                outs = vard.ToString() + "." + fract.ToString("D" + decimals.ToString());
+                outs = ((value < 0) ? "-" : "") + whole.ToString() + "." + fract.ToString("D" + decimals.ToString());
             }
             else
             {
