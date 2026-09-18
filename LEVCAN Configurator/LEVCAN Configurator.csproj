@@ -8,9 +8,11 @@
     <StartupObject />
     <Platforms>AnyCPU</Platforms>
     <UseWindowsForms>True</UseWindowsForms>
-    <BaseOutputPath>..\Bin\</BaseOutputPath>
-	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\Bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 	<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -105,5 +107,20 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="CopyNativeLevcanLibToOutput" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)runtimes\win-x64\native\LEVCANlib.dll"
+          DestinationFolder="$(OutputPath)"
+          Condition="Exists('$(OutputPath)runtimes\win-x64\native\LEVCANlib.dll')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll"
+          DestinationFolder="$(OutputPath)runtimes\win-x64\native"
+          Condition="!Exists('$(OutputPath)runtimes\win-x64\native\LEVCANlib.dll') and Exists('..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll"
+          DestinationFolder="$(OutputPath)"
+          Condition="!Exists('$(OutputPath)LEVCANlib.dll') and Exists('..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll')"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

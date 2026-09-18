@@ -28,6 +28,7 @@ namespace LEVCAN
 
         public event EventHandler OnDisconnected;
         public event EventHandler OnConnected;
+        public event Action? FrameActivity;
 
         public int TXcounter { get { return txcounter; } set { txcounter = value; } }
         public int RXcounter { get { return rxcounter; } set { rxcounter = value; } }
@@ -109,6 +110,7 @@ namespace LEVCAN
             if (filterPassed)
             {
                 rxcounter++;
+                FrameActivity?.Invoke();
                 uint[] data = new uint[2];
                 Buffer.BlockCopy(frame.Data, 0, data, 0, frame.Data.Length);
                 LC_Interface.lib_ReceiveHandler(_node.DescriptorPtr, headerPacked.ToUint, data, (byte)frame.Data.Length);
@@ -156,6 +158,7 @@ namespace LEVCAN
             senddata.Data = dataAsB;
 
             txcounter++;
+            FrameActivity?.Invoke();
             try
             {
                 canChannel.Send(senddata);

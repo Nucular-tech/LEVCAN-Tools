@@ -33,47 +33,54 @@
     <RootNamespace>WinLEVCAN</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>LEVCAN Lib</ProjectName>
+    <SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LEVCAN Tools.sln'))\</SolutionDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
+    <PlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -105,37 +112,37 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>LEVCANlib</TargetName>
     <IntDir>Buid\$(Configuration)\win-x86\native\</IntDir>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-x86\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-x86\native\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>LEVCANlib</TargetName>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-x64\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-x64\native\</OutDir>
     <IntDir>Buid\$(Configuration)\win-x64\native\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>LEVCANlib</TargetName>
     <IntDir>Buid\$(Configuration)\win-arm64\native\</IntDir>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-arm64\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-arm64\native\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-x86\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-x86\native\</OutDir>
     <IntDir>Buid\$(Configuration)\win-x86\native\</IntDir>
     <TargetName>LEVCANlib</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>LEVCANlib</TargetName>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-x64\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-x64\native\</OutDir>
     <IntDir>Buid\$(Configuration)\win-x64\native\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>LEVCANlib</TargetName>
     <IntDir>Buid\$(Configuration)\win-arm64\native\</IntDir>
-    <OutDir>$(SolutionDir)\Bin\$(Configuration)\runtimes\win-arm64\native\</OutDir>
+    <OutDir>$(SolutionDir)Bin\$(Configuration)\runtimes\win-arm64\native\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -155,8 +162,8 @@
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>if exist "$(OutDir)*.lib" del "$(OutDir)*.lib"
+if exist "$(OutDir)*.exp" del "$(OutDir)*.exp"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -178,8 +185,10 @@
       <AdditionalDependencies>Mqrt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetPath)" "$(SolutionDir)Bin\$(Configuration)\LEVCANlib.dll"
+if exist "$(OutDir)*.lib" del "$(OutDir)*.lib"
+if exist "$(OutDir)*.exp" del "$(OutDir)*.exp"
+if exist "$(OutDir)$(TargetName).pdb" copy /Y "$(OutDir)$(TargetName).pdb" "$(SolutionDir)Bin\$(Configuration)\$(TargetName).pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -226,8 +235,8 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(OutDir)\*.lib"
-del "$(OutDir)\*.exp"</Command>
+      <Command>if exist "$(OutDir)*.lib" del "$(OutDir)*.lib"
+if exist "$(OutDir)*.exp" del "$(OutDir)*.exp"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -251,8 +260,9 @@ del "$(OutDir)\*.exp"</Command>
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(OutDir)\*.lib"
-del "$(OutDir)\*.exp"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(SolutionDir)Bin\$(Configuration)\LEVCANlib.dll"
+if exist "$(OutDir)*.lib" del "$(OutDir)*.lib"
+if exist "$(OutDir)*.exp" del "$(OutDir)*.exp"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">

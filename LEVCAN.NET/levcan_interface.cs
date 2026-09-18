@@ -9,34 +9,35 @@ namespace LEVCAN
 {
     public unsafe class LC_Interface
     {
-        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public static extern void lib_ReceiveHandler(IntPtr node, uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 2)] uint[] data, byte length);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ReceiveHandler", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public static extern void lib_ReceiveHandler(IntPtr node, uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 8)] byte[] data, byte length);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_Set_SendCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_SendCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         private static extern void lib_setSendCallback(SendCallback callback);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FilterCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FilterCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         private static extern void lib_setFilterCallback(_filterCallback callback);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_ConfigureFilters", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_ConfigureFilters", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         private static extern void lib_ConfigureFilters(IntPtr node);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_Set_QueueCallbacks", CharSet = CharSet.Ansi)]
-        private static extern void _setQueueCallbacks(qCreate create, qDelete delete, qReceive receive, qSendBack toback);
-
-        [DllImport("LEVCANlib", EntryPoint = "LC_Set_AddressCallback", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_AddressCallback", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         private static extern void _setAddressCallback(_remoteNodeCallback callback);
 
         static uint[] reg;
         static uint[] mask;
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate LC_Return SendCallback(uint header, [MarshalAs(UnmanagedType.LPArray, SizeConst = 2)] uint[] data, byte length);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate LC_Return FilterCallback(uint reg, uint mask, byte index);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate LC_Return _filterCallback(uint* reg, uint* mask, byte cnt);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate void _remoteNodeCallback(LC_NodeShortName shortname, ushort index, ushort state);
         public delegate void RemoteNodeCallback(LC_NodeShortName shortname, ushort index, LC_AddressState state);
 
@@ -46,18 +47,6 @@ namespace LEVCAN
         private static _filterCallback filter_callback_private;
         private static _remoteNodeCallback _addressCallback;
         private static RemoteNodeCallback addressCallback;
-        private static bool queuesSet = false;
-
-        delegate IntPtr qCreate(int length, uint itemsize);
-        delegate void qDelete(lcQueue_t* queue);
-        delegate int qReceive(lcQueue_t* queue, byte* buffer, int timeToWait);
-        delegate int qSendBack(lcQueue_t* queue, byte* buffer, int timeToWait);
-        //anti-garbage collector
-        private static qCreate qcreate;
-        private static qDelete qdelete;
-        private static qReceive qreceive;
-        private static qSendBack qsendback;
-        static List<BCollectionSized> qlist;
 
         public static void SetFilterCallback(FilterCallback callback)
         {
@@ -101,94 +90,14 @@ namespace LEVCAN
             }
         }
 
-        struct lcQueue_t
-        {
-            public uint QueueIndex;
-            public uint Deleted;
-        }
-
-        //little queue wrapper for low-level code. 
-        //since levcan only creates queues we store them in a list and get acces by index
+        // Queues are now handled natively inside LEVCANlib. Retained for API compatibility.
         public static void InitQHandlers()
         {
-            if (qlist == null)
-            {
-                qlist = new List<BCollectionSized>();
-                qcreate = QueueCreate;
-                qdelete = QueueDelete;
-                qreceive = QueueReceive;
-                qsendback = QueueSendBack;
-                _setQueueCallbacks(qcreate, qdelete, qreceive, qsendback);
-                queuesSet = true;
-            }
-        }
-
-        private static int QueueSendBack(lcQueue_t* queue, byte* buffer, int timeToWait)
-        {
-            if (queue == null)
-                return 0;
-
-            if (queue->Deleted == 0 && queue->QueueIndex < qlist.Count)
-            {
-                var specificQ = qlist[(int)queue->QueueIndex];
-                byte[] newdata = new byte[specificQ.ItemSize];
-                //copy data to receiver
-                for (int i = 0; i < newdata.Length; i++)
-                {
-                    if (buffer != null)
-                        newdata[i] = buffer[i];
-                    else
-                        newdata[i] = 0;
-                }
-                bool added = specificQ.TryAdd(newdata, timeToWait);
-                return added ? 1 : 0;
-            }
-            return 0;
-        }
-
-        private static int QueueReceive(lcQueue_t* queue, byte* buffer, int timeToWait)
-        {
-            if (queue->Deleted == 0 && queue->QueueIndex < qlist.Count)
-            {
-                var specificQ = qlist[(int)queue->QueueIndex];
-                byte[] bytes;
-                bool taken = specificQ.TryTake(out bytes, (int)timeToWait);
-                if (taken && buffer != null)
-                {
-                    //copy data to receiver
-                    for (int i = 0; i < specificQ.ItemSize && i < bytes.Length; i++)
-                    {
-                        buffer[i] = bytes[i];
-                    }
-                    return 1;
-                }
-            }
-            return 0;
-        }
-
-        private static IntPtr QueueCreate(int length, uint itemsize)
-        {
-            //levcan does not delete much queues, and usually stores them. so here is simple q-list
-            BCollectionSized collect = new BCollectionSized(length, itemsize);
-            qlist.Add(collect);
-            lcQueue_t qi = new lcQueue_t();
-            qi.Deleted = 0;
-            qi.QueueIndex = (uint)qlist.IndexOf(collect);
-            return qi.ToIntPtr();
-        }
-
-        private static void QueueDelete(lcQueue_t* queue)
-        {
-            if (queue->Deleted == 0 && queue->QueueIndex < qlist.Count)
-            {
-                qlist[(int)queue->QueueIndex].Dispose();
-                queue->Deleted = 1;
-            }
         }
 
         public static bool IsReady()
         {
-            return send_callback != null && filter_callback != null && filter_callback_private != null && queuesSet;
+            return send_callback != null && filter_callback != null && filter_callback_private != null;
         }
 
         public static void SetAddressCallback(RemoteNodeCallback callback)
@@ -199,8 +108,15 @@ namespace LEVCAN
         }
         public static void remoteCallback(LC_NodeShortName shortname, ushort index, ushort state)
         {
-            //non blocking callback
-            addressCallback(shortname, index, (LC_AddressState)state);
+            try
+            {
+                //non blocking callback
+                addressCallback?.Invoke(shortname, index, (LC_AddressState)state);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LC_Interface.remoteCallback exception: {ex.Message}");
+            }
         }
 
         public static void ConfigureFilters(LC_Node node)

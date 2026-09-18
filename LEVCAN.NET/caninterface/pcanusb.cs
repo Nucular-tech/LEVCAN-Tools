@@ -25,6 +25,7 @@ namespace LEVCAN
         TPCANBaudrate baudrate = TPCANBaudrate.PCAN_BAUD_1M;
         public event EventHandler OnDisconnected;
         public event EventHandler OnConnected;
+        public event Action? FrameActivity;
 
         public int TXcounter { get { return txcounter; } set { txcounter = value; } }
         public int RXcounter { get { return rxcounter; } set { rxcounter = value; } }
@@ -147,6 +148,7 @@ namespace LEVCAN
                 if (filterPassed)
                 {
                     rxcounter++;
+                    FrameActivity?.Invoke();
                     LC_Interface.lib_ReceiveHandler(_node.DescriptorPtr, headerPacked.ToUint, ByteToUintArr(CANMsg.DATA), CANMsg.LEN);
                 }
 
@@ -204,7 +206,10 @@ namespace LEVCAN
                     PCANBasic.GetErrorText(sts, 0, strTemp);
                 }
                 else
+                {
                     txcounter++;
+                    FrameActivity?.Invoke();
+                }
                 return LC_Return.Ok;
             }
 

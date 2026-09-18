@@ -30,17 +30,7 @@ namespace LEVCAN_Configurator.Tabs
         public void Initialize(LevcanHandler lchandler, Settings settings)
         {
             Lev = lchandler;
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_DCSupply, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_Supply_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_MotorSupply, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_Supply_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_InternalVoltage, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_InternalVoltage_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_Power, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_Power_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_Temperature, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_Temperature_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_RPM, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_RPM_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellMinMax, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_CellMinMax_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellsV, ProcessMessage, LC_ObjectAttributes.Writable, -194)); //up to 96 cells
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_CellBalance, ProcessMessage, LC_ObjectAttributes.Writable, -32));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_ActiveFunctions, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_ActiveFunctions_t)));
-            Lev.AddNodeObject(new LC_ObjectFunction((ushort)LC_Objects_Std.LC_Obj_PowerModeIndex, ProcessMessage, LC_ObjectAttributes.Writable, typeof(LC_Obj_PowerMode_t)));
+            Lev.Telemetry.StandardObjectReceived += ProcessMessage;
             barknob = new Knob(ImGuiDataType.Float, ImGuiKnobVariant.WiperOnly, 110, ImGuiKnobFlags.BottomTitle | ImGuiKnobFlags.NoInput | ImGuiKnobFlags.NoHover | ImGuiKnobFlags.CenterValue, 0.6f, 0.7f);
 
             if (ImGui.GetIO().Fonts.Fonts.Size > 1)

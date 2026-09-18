@@ -37,6 +37,8 @@ namespace LEVCAN
         byte remoteNode;
         Encoding remoteEncoding;
         public List<LCPC_Directory> Directories { get; private set; }
+
+        public void SetDirectories(List<LCPC_Directory> dirs) { Directories = dirs; }
         //can be requested only once, otherwise collision will happen
         static Mutex sync = new Mutex(false);
         bool toBeDisposed = false;
@@ -77,21 +79,40 @@ namespace LEVCAN
             }
         }
 
-        Mutex updateOne = new Mutex(false);
+        int updateOneInFlight = 0;
         public async Task UpdateDirectoriesAsync()
         {
             if (toBeDisposed)
                 return;
-            if (updateOne.WaitOne(1))
+            if (Interlocked.CompareExchange(ref updateOneInFlight, 1, 0) != 0)
+                return; // already running
+            try
             {
                 await Task.Factory.StartNew(() => { UpdateDirectories(); });
                 await UpdateEntriesAsync(0);
                 await UpdateEntriesAsync(); //update rest
-                updateOne.ReleaseMutex();
             }
-            else
+            finally
             {
+                Interlocked.Exchange(ref updateOneInFlight, 0);
             }
+        }
+
+        public LCPC_Directory? RequestDirectory(ushort index)
+        {
+            if (toBeDisposed) return null;
+            var dir_struct = new lcpc_Directory_t();
+            LC_Return result;
+            sync.WaitOne();
+            result = lib_RequestDirectory(myNode.DescriptorPtr, remoteNode, index, ref dir_struct);
+            sync.ReleaseMutex();
+            if (result == LC_Return.Ok)
+            {
+                var d = new LCPC_Directory(dir_struct, remoteEncoding);
+                lib_CleanDirectory(ref dir_struct);
+                return d;
+            }
+            return null;
         }
 
         public void UpdateDirectories()

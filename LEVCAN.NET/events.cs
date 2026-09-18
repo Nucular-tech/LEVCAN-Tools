@@ -8,13 +8,13 @@ using System.Drawing;
 
 namespace LEVCAN.NET
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     struct lc_event_t
     {
         public IntPtr Text;
         public IntPtr Caption;
-        public byte Buttons;
-        public byte Icon;
+        public uint Buttons;
+        public uint Icon;
         public byte Sender;
     }
 
@@ -80,7 +80,8 @@ namespace LEVCAN.NET
 
         LC_Node _node;
         private Delegate _callback_api;
-        private delegate void lc_callback(ref LC_NodeDescriptor descriptor, LC_Header header, IntPtr data, int size);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void lc_callback(IntPtr descriptor, LC_Header header, IntPtr data, int size);
         private LC_EventCallback _callback_user;
         public delegate void LC_EventCallback(LC_Event_t eventData);
 
@@ -95,26 +96,35 @@ namespace LEVCAN.NET
             Pointer = Marshal.GetFunctionPointerForDelegate(_callback_api);
         }
 
-        private void lc_EventCallback(ref LC_NodeDescriptor descriptor, LC_Header header, IntPtr data, int size)
+        private void lc_EventCallback(IntPtr descriptor, LC_Header header, IntPtr data, int size)
         {
-            if (header.MsgID != (ushort)LC_SystemMessage.Events)
-                return;
-            lc_event_t raw_evnt = new lc_event_t();
-            LC_Return status = lc_EventReceive(data, size, header.Source, ref raw_evnt);
-
-            if (status == LC_Return.Ok)
+            try
             {
-                var encoding = _node.GetNodeEncoding(header.Source);
-                LC_Event_t event_value = new LC_Event_t();
-                event_value.Sender = header.Source;
-                event_value.Buttons = (LC_EventButtons_t)raw_evnt.Buttons;
-                event_value.Caption = Text8z.PtrToString(raw_evnt.Caption, encoding, 128);
-                Marshal.FreeHGlobal(raw_evnt.Caption);
-                event_value.Text = Text8z.PtrToString(raw_evnt.Text, encoding, 512);
-                Marshal.FreeHGlobal(raw_evnt.Text);
-                event_value.Icon = (LC_EventIcon_t)raw_evnt.Icon;
+                if (header.MsgID != (ushort)LC_SystemMessage.Events)
+                    return;
+                lc_event_t raw_evnt = new lc_event_t();
+                LC_Return status = lc_EventReceive(data, size, header.Source, ref raw_evnt);
 
-                _callback_user?.Invoke(event_value);
+                if (status == LC_Return.Ok)
+                {
+                    var encoding = _node.GetNodeEncoding(header.Source);
+                    LC_Event_t event_value = new LC_Event_t();
+                    event_value.Sender = header.Source;
+                    event_value.Buttons = (LC_EventButtons_t)raw_evnt.Buttons;
+                    event_value.Caption = Text8z.PtrToString(raw_evnt.Caption, encoding, 128);
+                    if (raw_evnt.Caption != IntPtr.Zero)
+                        LC_Node.LC_Free(raw_evnt.Caption);
+                    event_value.Text = Text8z.PtrToString(raw_evnt.Text, encoding, 512);
+                    if (raw_evnt.Text != IntPtr.Zero)
+                        LC_Node.LC_Free(raw_evnt.Text);
+                    event_value.Icon = (LC_EventIcon_t)raw_evnt.Icon;
+
+                    _callback_user?.Invoke(event_value);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LC_Events.lc_EventCallback exception: {ex.Message}");
             }
         }
     }

@@ -13,13 +13,16 @@ namespace LEVCAN_Configurator.Tabs
         public bool Draw()
         {
             // Pop-up events
-            for (int i = 0; i < events.Count; i++)
+            lock (events)
             {
-                events[i].DrawMessage();
-                if (events[i].ToDelete)
+                for (int i = 0; i < events.Count; i++)
                 {
-                    events.RemoveAt(i);
-                    i--;
+                    events[i].DrawMessage();
+                    if (events[i].ToDelete)
+                    {
+                        events.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
             return false;
@@ -33,15 +36,18 @@ namespace LEVCAN_Configurator.Tabs
 
         void EvenCallback(LC_Event_t data)
         {
-            foreach (EventMessage e in events)
+            lock (events)
             {
-                if (e.Sender == data.Sender)
+                foreach (EventMessage e in events)
                 {
-                    e.UpdateMessage(data);
-                    return;
+                    if (e.Sender == data.Sender)
+                    {
+                        e.UpdateMessage(data);
+                        return;
+                    }
                 }
+                events.Add(new EventMessage(data));
             }
-            events.Add(new EventMessage(data));
         }
     }
 }

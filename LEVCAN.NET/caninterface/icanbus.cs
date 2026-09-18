@@ -17,6 +17,7 @@ namespace LEVCAN
 
         event EventHandler OnDisconnected;
         event EventHandler OnConnected;
+        event Action? FrameActivity;
 
         void Open();
         void Close();

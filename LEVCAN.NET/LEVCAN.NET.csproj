@@ -31,4 +31,29 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Condition="Exists('..\Bin\$(Configuration)\runtimes\win-x64\native\LEVCANlib.dll')">
+    <None Include="..\Bin\$(Configuration)\runtimes\win-x64\native\LEVCANlib.dll">
+      <Link>runtimes\win-x64\native\LEVCANlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('..\Bin\$(Configuration)\runtimes\win-x64\native\LEVCANlib.dll') and Exists('..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll')">
+    <None Include="..\Bin\Release\runtimes\win-x64\native\LEVCANlib.dll">
+      <Link>runtimes\win-x64\native\LEVCANlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup Condition="Exists('..\Bin\$(Configuration)\runtimes\win-x86\native\LEVCANlib.dll')">
+    <None Include="..\Bin\$(Configuration)\runtimes\win-x86\native\LEVCANlib.dll">
+      <Link>runtimes\win-x86\native\LEVCANlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup Condition="!Exists('..\Bin\$(Configuration)\runtimes\win-x86\native\LEVCANlib.dll') and Exists('..\Bin\Release\runtimes\win-x86\native\LEVCANlib.dll')">
+    <None Include="..\Bin\Release\runtimes\win-x86\native\LEVCANlib.dll">
+      <Link>runtimes\win-x86\native\LEVCANlib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

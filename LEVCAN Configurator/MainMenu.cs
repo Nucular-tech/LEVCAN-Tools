@@ -32,6 +32,7 @@ namespace LEVCAN_Configurator
         Properties.Settings settings;
         Stopwatch stopwatch = new Stopwatch();
         long stopwatch_ms = 0;
+        private FrameRateLimiter _frameLimiter;
 
         static void SetThing(out float i, float val) { i = val; }
 
@@ -44,13 +45,20 @@ namespace LEVCAN_Configurator
             // Create window, GraphicsDevice, and all resources necessary for the demo.
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 new WindowCreateInfo(50, 50, 800, 750, WindowState.Normal, "LEVCAN Configurator"),
-                new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
+                new GraphicsDeviceOptions(true, null, false, ResourceBindingModel.Improved, true, true),
                 out _window,
                 out _gd);
+            _gd.MainSwapchain.SyncToVerticalBlank = false;
+            var idleDetector = new IdleDetector();
+            using var frameLimiter = new FrameRateLimiter(60.0);
+            _frameLimiter = frameLimiter;
+            _window.FocusGained += () => idleDetector.Reset();
             _window.Resized += () =>
             {
                 _gd.MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
+                _gd.MainSwapchain.SyncToVerticalBlank = false;
                 _controller.WindowResized(_window.Width, _window.Height);
+                idleDetector.Reset();
             };
             _cl = _gd.ResourceFactory.CreateCommandList();
             _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
@@ -58,6 +66,8 @@ namespace LEVCAN_Configurator
 
             settings = Properties.Settings.Default;
             Lev = new LevcanHandler(settings.Speed, (CANDevice)settings.Connection);
+            Lev.CommunicationActivity += () => idleDetector.Reset();
+            LevcanHandler.RequestWake = () => idleDetector.Reset();
             Lev.FileServer.SavePath = settings.FSpath;
 
             List<IMGUI_TabInterface> tabsListInit = new List<IMGUI_TabInterface>();
@@ -67,6 +77,7 @@ namespace LEVCAN_Configurator
             settingsTab.logo = ImageLoader.GetImGUITexture(Properties.Resources.logo, _gd, _controller);
             tabsListInit.Add(settingsTab);
             tabsListInit.Add(new EventsNotifications());
+            tabsListInit.Add(new DebugProbeTab());
             foreach (var tab in tabsListInit)
             {
                 tab.Initialize(Lev, settings);
@@ -75,11 +86,15 @@ namespace LEVCAN_Configurator
 
             try
             {
-                var catalog = new DirectoryCatalog("Plugins");
-                using (var container = new CompositionContainer(catalog))
+                string pluginsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+                if (System.IO.Directory.Exists(pluginsDir))
                 {
-                    // Match Imports in "prgm" object with corresponding exports in all catalogs in the container
-                    container.ComposeParts(this);
+                    var catalog = new DirectoryCatalog(pluginsDir);
+                    using (var container = new CompositionContainer(catalog))
+                    {
+                        // Match Imports in "prgm" object with corresponding exports in all catalogs in the container
+                        container.ComposeParts(this);
+                    }
                 }
             }
             catch { }
@@ -97,16 +112,33 @@ namespace LEVCAN_Configurator
                 }
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+            long lastTicks = frameLimiter.GetInitialLastTicks();
+
             // Main application loop
             while (_window.Exists)
             {
+                long frameStartTicks = frameLimiter.GetTicks();
+                float deltaSeconds = frameLimiter.ComputeDeltaSeconds(frameStartTicks, lastTicks);
+                lastTicks = frameStartTicks;
+
                 InputSnapshot snapshot = _window.PumpEvents();
                 if (!_window.Exists)
                     break;
-                _controller.Update(1f / 60f, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
+                _controller.Update(deltaSeconds, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
 
-                if (!_window.Focused)
-                    Thread.Sleep(10);
+                bool isMinimized = _window.WindowState == WindowState.Minimized;
+                bool isWindowFocused = _window.Focused && !isMinimized;
+                int currentTxRx = (Lev.icanPort != null) ? (Lev.icanPort.TXcounter + Lev.icanPort.RXcounter) : 0;
+                bool isUiActive = ImGui.IsAnyItemActive();
+
+                bool isThrottled = idleDetector.Update(
+                    snapshot,
+                    _window.Width,
+                    _window.Height,
+                    isWindowFocused,
+                    currentTxRx,
+                    isUiActive
+                );
 
                 stopwatch.Restart();
                 SubmitUI();
@@ -122,6 +154,26 @@ namespace LEVCAN_Configurator
                 stopwatch_ms = stopwatch.ElapsedMilliseconds;
 
                 _gd.SwapBuffers(_gd.MainSwapchain);
+
+                if (isThrottled)
+                {
+                    int delay = IdleDetector.GetThrottleDelay(isWindowFocused);
+                    idleDetector.WakeSignal.WaitOne(delay);
+                }
+
+                // Strictly enforce 60 FPS maximum cap (minimum frame time ~16.67ms)
+                frameLimiter.WaitNextFrame(frameStartTicks);
+            }
+
+            idleDetector.Dispose();
+            _frameLimiter = null;
+
+            foreach (var tab in tabsList)
+            {
+                if (tab is IDisposable disposable)
+                {
+                    try { disposable.Dispose(); } catch { }
+                }
             }
 
             settings.Save();
@@ -171,7 +223,9 @@ namespace LEVCAN_Configurator
             ImGui.EndChild();
             // BOTTOM STATUS INFO
             float saved_cursorY = ImGui.GetCursorPosY();
-            float framerate = ImGui.GetIO().Framerate;
+            float maxFps = _frameLimiter != null ? (float)_frameLimiter.TargetFps : 60f;
+            float framerate = Math.Min(ImGui.GetIO().Framerate, maxFps);
+            float frameTimeMs = framerate > 0f ? (1000.0f / framerate) : 0f;
 
             ticks++;
             if (ticks >= 30)
@@ -191,13 +245,9 @@ namespace LEVCAN_Configurator
                     Lev.Node.SendData(CastingHelper.CastToArray(dateTime), (byte)LC_Address.Broadcast, (ushort)LC_SystemMessage.DateTime);
                 }
             }
-            ImGui.Text($"{status} | TX/RX: {txrx_count} | Application average {stopwatch_ms:0.##} ms/frame ({framerate:0.#} FPS) | ");
+            ImGui.Text($"{status} | TX/RX: {txrx_count} | Application average {frameTimeMs:0.##} ms/frame ({framerate:0.#} FPS) | ");
             bottom_bar_offset = ImGui.GetCursorPosY() - saved_cursorY;
             ImGui.End();
-
-
-            ImGuiIOPtr io = ImGui.GetIO();
-            SetThing(out io.DeltaTime, 2f);
         }
 
         void ApplyStyle()

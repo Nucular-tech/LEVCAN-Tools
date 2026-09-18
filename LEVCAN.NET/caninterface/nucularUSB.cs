@@ -135,6 +135,7 @@ namespace LEVCAN
 
         public event EventHandler OnDisconnected;
         public event EventHandler OnConnected;
+        public event Action? FrameActivity;
 
         public int TXcounter { get { return txcounter; } set { txcounter = value; } }
         public int RXcounter { get { return rxcounter; } set { rxcounter = value; } }
@@ -357,6 +358,7 @@ namespace LEVCAN
                             //data ready! pack ID
                             LC_Interface.lib_ReceiveHandler(_node.DescriptorPtr, convertID, candata.Data, candata.DLC);
                             rxcounter++;
+                            FrameActivity?.Invoke();
                         }
                         else if (buffer[0] == (byte)usbFrameID.USB)//USB frame
                         {
@@ -409,6 +411,7 @@ namespace LEVCAN
                 swGlb.Restart();
             }
             txcounter++;
+            FrameActivity?.Invoke();
             try
             {
                 var bytes = CastingHelper.CastToArray(senddata);

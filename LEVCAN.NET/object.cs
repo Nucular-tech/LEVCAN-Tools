@@ -74,7 +74,8 @@ namespace LEVCAN
     public unsafe class LC_ObjectFunction : LC_IObject
     {
         public delegate void Callback(LC_Header header, object data);
-        private delegate void lc_callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void lc_callback(IntPtr descriptor, LC_Header header, void* data, int size);
 
         private Callback _callback;
         private Delegate _callback_api;
@@ -131,19 +132,26 @@ namespace LEVCAN
         public ushort Attributes { get { return (ushort)attributes; } }
 
         //overlay from LEVCAN unsafe to safe managed code
-        internal void lc_Callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size)
+        internal void lc_Callback(IntPtr descriptor, LC_Header header, void* data, int size)
         {
-            if (type == null)
+            try
             {
-                byte[] dataBytes = new byte[size];
-                //levcan.c will take care about memfree
-                Marshal.Copy((IntPtr)data, dataBytes, 0, size);
-                _callback.Invoke(header, dataBytes);
+                if (type == null)
+                {
+                    byte[] dataBytes = new byte[size];
+                    //levcan.c will take care about memfree
+                    Marshal.Copy((IntPtr)data, dataBytes, 0, size);
+                    _callback.Invoke(header, dataBytes);
+                }
+                else
+                {
+                    var converted = Marshal.PtrToStructure((IntPtr)data, type);
+                    _callback.Invoke(header, converted);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var converted = Marshal.PtrToStructure((IntPtr)data, type);
-                _callback.Invoke(header, converted);
+                System.Diagnostics.Debug.WriteLine($"LC_ObjectFunction.lc_Callback exception: {ex.Message}");
             }
         }
     }
@@ -151,7 +159,8 @@ namespace LEVCAN
     public unsafe class LC_ObjectString : LC_IObject
     {
         public delegate void Callback(LC_Header header, string text);
-        private delegate void lc_callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void lc_callback(IntPtr descriptor, LC_Header header, void* data, int size);
 
         public Callback? OnChange;
         //gc anticollector
@@ -172,26 +181,28 @@ namespace LEVCAN
             Pointer = Marshal.GetFunctionPointerForDelegate(_callback_api);
         }
         //overlay from LEVCAN unsafe to safe managed code
-        internal void lc_Callback(LC_NodeDescriptor* descriptor, LC_Header header, void* data, int size)
+        internal void lc_Callback(IntPtr descriptor, LC_Header header, void* data, int size)
         {
-            var owner = LC_Node.GetNodeByDesc(descriptor);
-            if (header.Request)
+            try
             {
-                //request to send
-            }
-            else
-            {
-                var sname = owner.GetNodeShortName(header.Source);
-                Encoding page;
-                if (sname.NodeID == (ushort)LC_Address.Broadcast)
-                    page = descriptor->ShortName.CodePage;//not found, use own codepage
+                var owner = LC_Node.GetNodeByDesc(descriptor);
+                if (header.Request)
+                {
+                    //request to send
+                }
                 else
-                    page = sname.CodePage; //use sender codepage to decode
-                //received data
-                textStr = Text8z.PtrToString((IntPtr)data, page, size);
+                {
+                    Encoding page = owner.GetNodeEncoding(header.Source);
+                    //received data
+                    textStr = Text8z.PtrToString((IntPtr)data, page, size);
 
-                if (OnChange != null)
-                    OnChange.Invoke(header, textStr);
+                    if (OnChange != null)
+                        OnChange.Invoke(header, textStr);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LC_ObjectString.lc_Callback exception: {ex.Message}");
             }
         }
 

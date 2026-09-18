@@ -13,17 +13,6 @@ using System.Xml.Linq;
 
 namespace LEVCAN
 {
-
-
-    internal class BCollectionSized : BlockingCollection<byte[]>
-    {
-        public uint ItemSize;
-        public BCollectionSized(int length, uint itemsize) : base((int)itemsize)
-        {
-            ItemSize = itemsize;
-        }
-    }
-
     public class AddressChangeArgs : EventArgs
     {
         public LC_NodeShortName ShortName;
@@ -31,16 +20,43 @@ namespace LEVCAN
         public ushort Index;
     }
 
-    unsafe public class LC_Node
+    unsafe public class LC_Node : IDisposable
     {
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_Create", CharSet = CharSet.Ansi)]
+        public static extern IntPtr LC_Node_Create(byte nodeID);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_Destroy", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_Destroy(IntPtr node);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_SetIdentity", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_SetIdentity(IntPtr node, string nodeName, string deviceName, string vendorName, ushort codePage, uint[] serial);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_SetObjects", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_SetObjects(IntPtr node, IntPtr objects, ushort count);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_SetDirectories", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_SetDirectories(IntPtr node, IntPtr directories, ushort count);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_GetShortName", CharSet = CharSet.Ansi)]
+        public static extern LC_NodeShortName LC_Node_GetShortName(IntPtr node);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_SetShortName", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_SetShortName(IntPtr node, LC_NodeShortName shortName);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_GetState", CharSet = CharSet.Ansi)]
+        public static extern byte LC_Node_GetState(IntPtr node);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_SetAccessLevel", CharSet = CharSet.Ansi)]
+        public static extern void LC_Node_SetAccessLevel(IntPtr node, byte accessLevel);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Node_GetAccessLevel", CharSet = CharSet.Ansi)]
+        public static extern byte LC_Node_GetAccessLevel(IntPtr node);
+
         [DllImport("LEVCANlib", EntryPoint = "LC_LibInit", CharSet = CharSet.Ansi)]
         private static extern IntPtr LC_LibInit();
 
-        //[DllImport("LEVCANlib", EntryPoint = "LC_InitNodeDescriptor", CharSet = CharSet.Ansi)]
-        //private static extern LC_Return lib_initNodeDescriptor(LC_NodeDescriptor* node);
-
         [DllImport("LEVCANlib", EntryPoint = "LC_CreateNode", CharSet = CharSet.Ansi)]
-        private static extern LC_Return lib_createNode(LC_NodeDescriptor* node);
+        private static extern LC_Return lib_createNode(IntPtr node);
 
         [DllImport("LEVCANlib", EntryPoint = "LC_NetworkManager", CharSet = CharSet.Ansi)]
         private static extern void lib_networkManager(IntPtr node, uint time);
@@ -60,12 +76,28 @@ namespace LEVCAN
         [DllImport("LEVCANlib", EntryPoint = "LC_GetNode", CharSet = CharSet.Ansi)]
         private static extern LC_NodeShortName lib_getNode(ushort target);
 
+        [DllImport("LEVCANlib", EntryPoint = "LC_Malloc", CharSet = CharSet.Ansi)]
+        public static extern IntPtr LC_Malloc(IntPtr size);
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Free", CharSet = CharSet.Ansi)]
+        public static extern void LC_Free(IntPtr ptr);
+
 
         static List<LC_Node> nodes = new List<LC_Node>();
 
-        internal readonly LC_NodeDescriptor* descriptor;
-        public IntPtr DescriptorPtr { get { return (IntPtr)descriptor; } }
-        public LC_NodeShortName ShortName { get { return descriptor->ShortName; } }
+        internal readonly IntPtr descriptor;
+        public IntPtr DescriptorPtr { get { return descriptor; } }
+        public LC_NodeShortName ShortName
+        {
+            get { return LC_Node_GetShortName(descriptor); }
+            set { LC_Node_SetShortName(descriptor, value); }
+        }
+        public LC_NodeState State { get { return (LC_NodeState)LC_Node_GetState(descriptor); } }
+        public byte AccessLevel
+        {
+            get { return LC_Node_GetAccessLevel(descriptor); }
+            set { LC_Node_SetAccessLevel(descriptor, value); }
+        }
         public event EventHandler<AddressChangeArgs> AddressChanges;
 
         lc_object* objects_node;
@@ -73,23 +105,47 @@ namespace LEVCAN
 
         public LC_Node(byte nodeID)
         {
-            //setup load path, import DLL, reset path
-            descriptor = (LC_NodeDescriptor*)LC_LibInit();
+            descriptor = LC_Node_Create(nodeID);
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            descriptor->ShortName.CodePage = Encoding.GetEncoding(1251);
-            descriptor->ShortName.NodeID = nodeID;
-            descriptor->DeviceName = "LEVCAN PC library";
-            descriptor->NodeName = "LEVCAN PC library";
-            descriptor->VendorName = "Nucular.tech";
-            descriptor->Serial1 = 1;
-            descriptor->Serial2 = 2;
-            descriptor->Serial3 = 3;
-            descriptor->Serial4 = 4;
+            uint[] serial = new uint[] { 1, 2, 3, 4 };
+            LC_Node_SetIdentity(descriptor, "LEVCAN PC library", "LEVCAN PC library", "Nucular.tech", 1251, serial);
 
-            nodes.Add(this);
+            lock (nodes)
+            {
+                nodes.Add(this);
+            }
 
             LC_Interface.SetAddressCallback(addressChanges);
+        }
+
+        public void Dispose()
+        {
+            if (descriptor != IntPtr.Zero)
+            {
+                lock (nodes)
+                {
+                    nodes.Remove(this);
+                }
+                if (objects_node != null)
+                {
+                    Marshal.FreeHGlobal((IntPtr)objects_node);
+                    objects_node = null;
+                }
+                LC_Node_Destroy(descriptor);
+            }
+            GC.SuppressFinalize(this);
+        }
+
+        public void SetIdentity(string nodeName, string deviceName, string vendorName, ushort codePage, uint[]? serial = null)
+        {
+            uint[] s = serial ?? new uint[] { 1, 2, 3, 4 };
+            LC_Node_SetIdentity(descriptor, nodeName, deviceName, vendorName, codePage, s);
+        }
+
+        public void SetDirectories(IntPtr directories, ushort count)
+        {
+            LC_Node_SetDirectories(descriptor, directories, count);
         }
 
         private void addressChanges(LC_NodeShortName shortname, ushort index, LC_AddressState state)
@@ -107,6 +163,7 @@ namespace LEVCAN
             if (!LC_Interface.IsReady())
                 throw new NullReferenceException("Initialize interface class first!");
 
+            VirtualCanBus.ActiveSenderNode = this;
             lib_createNode(descriptor);
 
             var updates = new Thread(nodeUpdate);
@@ -122,6 +179,7 @@ namespace LEVCAN
 
         void nodeUpdate()
         {
+            VirtualCanBus.ActiveSenderNode = this;
             while (true)
             {
                 lib_networkManager(DescriptorPtr, 1);
@@ -131,9 +189,11 @@ namespace LEVCAN
 
         void nodeReceive()
         {
+            VirtualCanBus.ActiveSenderNode = this;
             while (true)
             {
                 lib_receiveManager(DescriptorPtr);
+                Thread.Sleep(1);
             }
         }
 
@@ -165,9 +225,7 @@ namespace LEVCAN
 
                 }
                 //assign obj list
-                descriptor->ObjectsSize = 0; //sync
-                descriptor->objects = objects_node;
-                descriptor->ObjectsSize = size;
+                LC_Node_SetObjects(descriptor, (IntPtr)objects_node, size);
 
                 //clean up old
                 if (objToFree != null)
@@ -193,21 +251,38 @@ namespace LEVCAN
             if (target > (ushort)LC_Address.Broadcast)
                 throw new ArgumentOutOfRangeException("Target ID out of range!");
 
+            VirtualCanBus.ActiveSenderNode = this;
             return lib_sendRequestSpec(DescriptorPtr, target, index, 0, (byte)(TCP ? 1 : 0));
         }
 
         public LC_Return SendData(byte[] bytes, byte target, ushort index, bool TCP = false)
         {
+            if (bytes == null)
+                throw new ArgumentNullException(nameof(bytes));
 
             lc_objectRecord message = new lc_objectRecord();
             message.NodeID = target;
             message.Size = bytes.Length;
-            message.Attributes = (ushort)lc_objectAttributes_internal.Cleanup;
-            if (TCP)
-                message.Attributes |= (ushort)lc_objectAttributes_internal.TCP;
 
-            message.Address = (void*)Marshal.AllocHGlobal(bytes.Length);
-            Marshal.Copy(bytes, 0, (IntPtr)message.Address, bytes.Length);
+            if (bytes.Length > 0)
+            {
+                message.Attributes = (ushort)lc_objectAttributes_internal.Cleanup;
+                if (TCP)
+                    message.Attributes |= (ushort)lc_objectAttributes_internal.TCP;
+
+                message.Address = (void*)LC_Malloc((IntPtr)bytes.Length);
+                if (message.Address == null)
+                    return LC_Return.MallocFail;
+                Marshal.Copy(bytes, 0, (IntPtr)message.Address, bytes.Length);
+            }
+            else
+            {
+                if (TCP)
+                    message.Attributes = (ushort)lc_objectAttributes_internal.TCP;
+                message.Address = null;
+            }
+
+            VirtualCanBus.ActiveSenderNode = this;
             return lib_sendMessage(DescriptorPtr, ref message, (ushort)index);
         }
 
@@ -230,12 +305,15 @@ namespace LEVCAN
             return lib_getNode(nodeID);
         }
 
-        internal static LC_Node GetNodeByDesc(LC_NodeDescriptor* desc)
+        internal static LC_Node GetNodeByDesc(IntPtr desc)
         {
-            foreach (var node in nodes)
+            lock (nodes)
             {
-                if (node.descriptor == desc)
-                    return node;
+                foreach (var node in nodes)
+                {
+                    if (node.descriptor == desc)
+                        return node;
+                }
             }
             throw new NullReferenceException("Node not found in list.");
         }

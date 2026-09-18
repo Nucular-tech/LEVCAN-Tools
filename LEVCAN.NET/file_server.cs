@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LEVCAN
 {
@@ -19,7 +18,6 @@ namespace LEVCAN
         CreateAlways = 0x08,  // Creates a new file. If the file is existing, it will be truncated and overwritten.
         OpenAlways = 0x10,    // Opens the file if it is existing. If not, a new file will be created.
         OpenAppend = 0x30,    // Same as OpenAlways except the read/write pointer is set end of the file.
-
     };
 
     public enum LC_FileResult
@@ -52,22 +50,19 @@ namespace LEVCAN
         FileNotOpened,        /* (25) File was closed by timeout or it wasn't opened at all  */
     };
 
-    public unsafe class LC_FileServer
+    public unsafe class LC_FileServer : IDisposable
     {
         private static FileMode ToFileMode(LC_FileAccess access)
         {
-            FileMode fm = 0;
             if (access.HasFlag(LC_FileAccess.CreateNew))
-                fm = FileMode.CreateNew;
-            else if (access.HasFlag(LC_FileAccess.CreateAlways))
-                fm = FileMode.Create;
-            else if (access.HasFlag(LC_FileAccess.OpenAlways))
-                fm = FileMode.OpenOrCreate;
-            else if (access.HasFlag(LC_FileAccess.OpenAppend))
-                fm = FileMode.Append;
-            else
-                fm = FileMode.Open;
-            return fm;
+                return FileMode.CreateNew;
+            if (access.HasFlag(LC_FileAccess.CreateAlways))
+                return FileMode.Create;
+            if (access.HasFlag(LC_FileAccess.OpenAlways))
+                return FileMode.OpenOrCreate;
+            if (access.HasFlag(LC_FileAccess.OpenAppend))
+                return FileMode.Append;
+            return FileMode.Open;
         }
 
         private static FileAccess ToFileAccess(LC_FileAccess access)
@@ -77,366 +72,559 @@ namespace LEVCAN
                 fa |= FileAccess.Read;
             if (access.HasFlag(LC_FileAccess.Write))
                 fa |= FileAccess.Write;
-            return fa;
+            return fa == 0 ? FileAccess.Read : fa;
         }
 
-        delegate LC_FileResult fOpen_d(IntPtr* fileObject, IntPtr name, LC_FileAccess mode);
-        delegate uint fTell_d(IntPtr fileObject);
-        delegate LC_FileResult fSeek_d(IntPtr fileObject, uint pointer);
-        delegate LC_FileResult fRead_d(IntPtr fileObject, byte* buffer, uint bytesToRead, uint* bytesReaded);
-        delegate LC_FileResult fWrite_d(IntPtr fileObject, byte* buffer, uint bytesToWrite, uint* bytesWritten);
-        delegate LC_FileResult fClose_d(IntPtr fileObject);
-        delegate uint fSize_d(IntPtr fileObject);
-        delegate LC_FileResult fTruncate_d(IntPtr fileObject);
-        delegate void fOnReceive_d();
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fOpen_d(IntPtr* fileObject, IntPtr name, LC_FileAccess mode);
 
-        fOpen_d fOpen;
-        fTell_d fTell;
-        fSeek_d fSeek;
-        fRead_d fRead;
-        fWrite_d fWrite;
-        fClose_d fClose;
-        fSize_d fSize;
-        fTruncate_d fTruncate;
-        fOnReceive_d fOnReceive;
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint fTell_d(IntPtr fileObject);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FileCallbacks", CharSet = CharSet.Ansi)]
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fSeek_d(IntPtr fileObject, uint pointer);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fRead_d(IntPtr fileObject, byte* buffer, uint bytesToRead, uint* bytesReaded);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fWrite_d(IntPtr fileObject, byte* buffer, uint bytesToWrite, uint* bytesWritten);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fClose_d(IntPtr fileObject);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate uint fSize_d(IntPtr fileObject);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate LC_FileResult fTruncate_d(IntPtr fileObject);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate void fOnReceive_d();
+
+        // Pinned static delegate references to ensure the garbage collector NEVER collects them
+        private static readonly fOpen_d s_fOpen = StaticFileOpen;
+        private static readonly fTell_d s_fTell = StaticFileTell;
+        private static readonly fSeek_d s_fSeek = StaticFileSeek;
+        private static readonly fRead_d s_fRead = StaticFileRead;
+        private static readonly fWrite_d s_fWrite = StaticFileWrite;
+        private static readonly fClose_d s_fClose = StaticFileClose;
+        private static readonly fSize_d s_fSize = StaticFileSize;
+        private static readonly fTruncate_d s_fTruncate = StaticFileTruncate;
+        private static readonly fOnReceive_d s_fOnReceive = StaticFileOnReceive;
+
+        private static bool s_callbacksRegistered = false;
+        private static readonly object s_callbacksLock = new();
+        private static LC_FileServer? s_activeServer;
+
+        [DllImport("LEVCANlib", EntryPoint = "LC_Set_FileCallbacks", CallingConvention = CallingConvention.StdCall)]
         private static extern void lib_setFileCallbacks(fOpen_d fopen, fTell_d ftell, fSeek_d flseek, fRead_d fread, fWrite_d fwrite, fClose_d fclose, fTruncate_d ftruncate, fSize_d fsize, fOnReceive_d onrec);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_FileServerInit", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_FileServerInit", CallingConvention = CallingConvention.StdCall)]
         private static extern LC_Return lib_FileServerInit(IntPtr node);
 
-        [DllImport("LEVCANlib", EntryPoint = "LC_FileServer", CharSet = CharSet.Ansi)]
+        [DllImport("LEVCANlib", EntryPoint = "LC_FileServer", CallingConvention = CallingConvention.StdCall)]
         private static extern void lib_FileServer(IntPtr node, uint tick);
 
-        LC_Node _node;
-        SemaphoreSlim mutex;
-        Dictionary<int, FileStream> files = new Dictionary<int, FileStream>();
-        int fileIndex = 1; //intptr=0 - error
-        string savePath;
+        private readonly LC_Node _node;
+        private readonly SemaphoreSlim _mutex = new(0, 100);
+        private readonly Dictionary<int, FileStream> _files = new();
+        private readonly object _filesLock = new();
+        private int _fileIndex = 1;
+        private string _savePath = "";
+        private volatile bool _running = true;
 
         public string SavePath
         {
-            get { return savePath; }
+            get => _savePath;
             set
-            {                
-                if (!Directory.Exists(value))
+            {
+                try
                 {
-                    Directory.CreateDirectory(value);
+                    if (!Directory.Exists(value))
+                    {
+                        Directory.CreateDirectory(value);
+                    }
+                    _savePath = Path.GetFullPath(value);
                 }
-                //todo close opened files? or keep them alive sice there is no conflict?
-                savePath = Path.GetFullPath(value);
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"LC_FileServer: failed to set SavePath '{value}': {ex.Message}");
+                    _savePath = AppDomain.CurrentDomain.BaseDirectory;
+                }
             }
         }
 
         public LC_FileServer(LC_Node node, string path)
         {
-            initCallbacks();
-            lib_FileServerInit(node.DescriptorPtr);
-            _node = node;
+            _node = node ?? throw new ArgumentNullException(nameof(node));
             SavePath = path;
 
-            mutex = new SemaphoreSlim(0);
-            var updates = new Thread(FileServerThread);
-            updates.IsBackground = true; //testing
+            InitCallbacks();
+
+            if (_node.DescriptorPtr != IntPtr.Zero)
+            {
+                lib_FileServerInit(_node.DescriptorPtr);
+            }
+
+            var updates = new Thread(FileServerThread)
+            {
+                IsBackground = true,
+                Name = "LEVCAN_FileServerThread"
+            };
             updates.Start();
         }
 
-        void initCallbacks()
+        private static void Log(string msg)
         {
-            if (fOpen != null)
-                return;
-
-            fOpen = fileOpen;
-            fTell = fileTell;
-            fSeek = fileSeek;
-            fRead = fileRead;
-            fWrite = fileWrite;
-            fClose = fileClose;
-            fSize = fileSize;
-            fTruncate = fileTruncate;
-            fOnReceive = fileOnReceive;
-            lib_setFileCallbacks(fOpen, fTell, fSeek, fRead, fWrite, fClose, fTruncate, fSize, fOnReceive);
+            try
+            {
+                string logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "file_server_trace.log");
+                File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}{Environment.NewLine}");
+            }
+            catch { }
         }
 
-        unsafe LC_FileResult fileOpen(IntPtr* fileObject, IntPtr name, LC_FileAccess mode)
+        private void InitCallbacks()
         {
-            LC_FileResult res = LC_FileResult.Ok;
-            string file = Text8z.PtrToString(name, _node.ShortName.CodePage);
-            file.Replace("..", ""); //no stepping up
-            file.Replace("\\\\", ""); //no root
-            string path = Path.GetFullPath(Path.Combine(savePath, file));
-            if (!path.StartsWith(savePath, StringComparison.Ordinal))
+            lock (s_callbacksLock)
             {
-                return LC_FileResult.InvalidName;
+                s_activeServer = this;
+                Log($"InitCallbacks: s_activeServer set. Callbacks registered = {s_callbacksRegistered}");
+                if (!s_callbacksRegistered)
+                {
+                    lib_setFileCallbacks(s_fOpen, s_fTell, s_fSeek, s_fRead, s_fWrite, s_fClose, s_fTruncate, s_fSize, s_fOnReceive);
+                    s_callbacksRegistered = true;
+                    Log("lib_setFileCallbacks successfully invoked.");
+                }
             }
+        }
+
+        #region Static Dispatchers (reverse P/Invoke entry points)
+
+        private static LC_FileResult StaticFileOpen(IntPtr* fileObject, IntPtr name, LC_FileAccess mode)
+        {
+            Log($"StaticFileOpen called: fileObject=0x{(long)fileObject:X}, name=0x{name.ToInt64():X}, mode={mode}");
+            if (fileObject != null) *fileObject = IntPtr.Zero;
+            var srv = s_activeServer;
+            if (srv == null)
+            {
+                Log("StaticFileOpen: s_activeServer is null!");
+                return LC_FileResult.NotReady;
+            }
+            var res = srv.FileOpen(fileObject, name, mode);
+            Log($"StaticFileOpen result: {res}");
+            return res;
+        }
+
+        private static uint StaticFileTell(IntPtr fileObject)
+        {
+            Log($"StaticFileTell: fileObject=0x{fileObject.ToInt64():X}");
+            var srv = s_activeServer;
+            return srv != null ? srv.FileTell(fileObject) : 0;
+        }
+
+        private static LC_FileResult StaticFileSeek(IntPtr fileObject, uint pointer)
+        {
+            Log($"StaticFileSeek: fileObject=0x{fileObject.ToInt64():X}, pointer={pointer}");
+            var srv = s_activeServer;
+            return srv != null ? srv.FileSeek(fileObject, pointer) : LC_FileResult.NotReady;
+        }
+
+        private static LC_FileResult StaticFileRead(IntPtr fileObject, byte* buffer, uint bytesToRead, uint* bytesReaded)
+        {
+            Log($"StaticFileRead: fileObject=0x{fileObject.ToInt64():X}, bytesToRead={bytesToRead}");
+            if (bytesReaded != null) *bytesReaded = 0;
+            var srv = s_activeServer;
+            return srv != null ? srv.FileRead(fileObject, buffer, bytesToRead, bytesReaded) : LC_FileResult.NotReady;
+        }
+
+        private static LC_FileResult StaticFileWrite(IntPtr fileObject, byte* buffer, uint bytesToWrite, uint* bytesWritten)
+        {
+            Log($"StaticFileWrite: fileObject=0x{fileObject.ToInt64():X}, bytesToWrite={bytesToWrite}");
+            if (bytesWritten != null) *bytesWritten = 0;
+            var srv = s_activeServer;
+            return srv != null ? srv.FileWrite(fileObject, buffer, bytesToWrite, bytesWritten) : LC_FileResult.NotReady;
+        }
+
+        private static LC_FileResult StaticFileClose(IntPtr fileObject)
+        {
+            Log($"StaticFileClose: fileObject=0x{fileObject.ToInt64():X}");
+            var srv = s_activeServer;
+            return srv != null ? srv.FileClose(fileObject) : LC_FileResult.NotReady;
+        }
+
+        private static uint StaticFileSize(IntPtr fileObject)
+        {
+            Log($"StaticFileSize: fileObject=0x{fileObject.ToInt64():X}");
+            var srv = s_activeServer;
+            return srv != null ? srv.FileSize(fileObject) : 0;
+        }
+
+        private static LC_FileResult StaticFileTruncate(IntPtr fileObject)
+        {
+            Log($"StaticFileTruncate: fileObject=0x{fileObject.ToInt64():X}");
+            var srv = s_activeServer;
+            return srv != null ? srv.FileTruncate(fileObject) : LC_FileResult.NotReady;
+        }
+
+        private static void StaticFileOnReceive()
+        {
+            Log("StaticFileOnReceive invoked from native code");
+            var srv = s_activeServer;
+            srv?.FileOnReceive();
+        }
+
+        #endregion
+
+        #region Instance Handlers (Safe & Exception-Contained)
+
+        private LC_FileResult FileOpen(IntPtr* fileObject, IntPtr name, LC_FileAccess mode)
+        {
+            if (fileObject == null)
+                return LC_FileResult.InvalidParameter;
+
+            *fileObject = IntPtr.Zero;
+
+            if (name == IntPtr.Zero)
+                return LC_FileResult.InvalidName;
 
             try
             {
-                //File uses stream buffer so should work pretty ok, unless your hdd is f*d up
-                FileStream fs = new FileStream(path, ToFileMode(mode), ToFileAccess(mode));
-                /*if (fs.Length < 10 * 1024 * 1024)
+                Encoding enc = Encoding.UTF8;
+                try
                 {
-                    //10mb file size, just copy to ram
-                    MemoryStream ms = new MemoryStream((int)fs.Length);
-                    fs.CopyTo(ms);
-                    fs.Close();
-                    fs = ms;
-                }*/
-                *fileObject = new IntPtr(fileIndex);
-                fileIndex++;
-                files.Add(fileObject->ToInt32(), fs);
+                    if (_node != null)
+                        enc = _node.ShortName.CodePage ?? Encoding.UTF8;
+                }
+                catch
+                {
+                    enc = Encoding.UTF8;
+                }
+
+                string? file = Text8z.PtrToString(name, enc, 512);
+                if (string.IsNullOrWhiteSpace(file))
+                    return LC_FileResult.InvalidName;
+
+                // Normalize path separators and prevent directory traversal
+                file = file.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+                while (file.Contains(".."))
+                {
+                    file = file.Replace("..", "");
+                }
+
+                file = file.TrimStart(Path.DirectorySeparatorChar);
+                if (string.IsNullOrWhiteSpace(file))
+                    return LC_FileResult.InvalidName;
+
+                string fullPath = Path.GetFullPath(Path.Combine(_savePath, file));
+                Log($"FileOpen: parsed filename='{file}', fullPath='{fullPath}', mode={mode}");
+                if (!fullPath.StartsWith(_savePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    Log($"FileOpen: path denied (not under savePath '{_savePath}')");
+                    return LC_FileResult.Denied;
+                }
+
+                // Ensure directory exists if filename has subdirectories
+                string? dir = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                FileStream fs = new FileStream(fullPath, ToFileMode(mode), ToFileAccess(mode), FileShare.ReadWrite);
+
+                lock (_filesLock)
+                {
+                    int handle = _fileIndex++;
+                    *fileObject = new IntPtr(handle);
+                    _files[handle] = fs;
+                    Log($"FileOpen: successfully opened handle {handle}");
+                }
+
+                return LC_FileResult.Ok;
             }
             catch (FileNotFoundException)
             {
-                res = LC_FileResult.NoFile;
-            }
-            catch (System.Security.SecurityException)
-            {
-                res = LC_FileResult.Denied;
+                return LC_FileResult.NoFile;
             }
             catch (DirectoryNotFoundException)
             {
-                res = LC_FileResult.NoPath;
+                return LC_FileResult.NoPath;
             }
             catch (UnauthorizedAccessException)
             {
-                res = LC_FileResult.Denied;
+                return LC_FileResult.Denied;
             }
             catch (PathTooLongException)
             {
-                res = LC_FileResult.InvalidName;
+                return LC_FileResult.InvalidName;
             }
             catch (IOException)
             {
-                if (ToFileMode(mode) == FileMode.CreateNew)
-                    res = LC_FileResult.Exist;
-                else
-                    res = LC_FileResult.IntErr;
+                return ToFileMode(mode) == FileMode.CreateNew ? LC_FileResult.Exist : LC_FileResult.IntErr;
             }
-            catch (NotSupportedException)
+            catch (Exception ex)
             {
-                res = LC_FileResult.IntErr;
+                Debug.WriteLine($"LC_FileServer: FileOpen exception: {ex.Message}");
+                return LC_FileResult.IntErr;
             }
-
-            return res;
         }
 
-        uint fileTell(IntPtr fileObject)
+        private uint FileTell(IntPtr fileObject)
         {
-            int key = fileObject.ToInt32();
-            if (files.ContainsKey(key))
-            {
-                return (uint)files[key].Position;
-            }
-            else
-                return 0;
-        }
-
-        LC_FileResult fileSeek(IntPtr fileObject, uint pointer)
-        {
-            var res = FileOpHelper.CallFileGetResult(() =>
+            try
             {
                 int key = fileObject.ToInt32();
-                files[key].Seek(pointer, SeekOrigin.Begin);
-            });
-
-            return res;
+                lock (_filesLock)
+                {
+                    if (_files.TryGetValue(key, out var fs))
+                        return (uint)fs.Position;
+                }
+            }
+            catch { }
+            return 0;
         }
 
-        LC_FileResult fileRead(IntPtr fileObject, byte* buffer, uint bytesToRead, uint* bytesReaded)
+        private LC_FileResult FileSeek(IntPtr fileObject, uint pointer)
         {
-            var res = FileOpHelper.CallFileGetResult(() =>
+            try
             {
                 int key = fileObject.ToInt32();
-                FileStream fs = files[key];
-                var ums = new UnmanagedMemoryStream(buffer, bytesToRead, bytesToRead, FileAccess.ReadWrite);
+                FileStream? fs;
+                lock (_filesLock)
+                {
+                    _files.TryGetValue(key, out fs);
+                }
+
+                if (fs == null)
+                    return LC_FileResult.FileNotOpened;
+
+                fs.Seek(pointer, SeekOrigin.Begin);
+                return LC_FileResult.Ok;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LC_FileServer: FileSeek exception: {ex.Message}");
+                return LC_FileResult.IntErr;
+            }
+        }
+
+        private LC_FileResult FileRead(IntPtr fileObject, byte* buffer, uint bytesToRead, uint* bytesReaded)
+        {
+            if (bytesReaded != null)
+                *bytesReaded = 0;
+
+            if (buffer == null || bytesReaded == null)
+                return LC_FileResult.InvalidParameter;
+
+            if (bytesToRead == 0)
+                return LC_FileResult.Ok;
+
+            try
+            {
+                int key = fileObject.ToInt32();
+                FileStream? fs;
+                lock (_filesLock)
+                {
+                    _files.TryGetValue(key, out fs);
+                }
+
+                if (fs == null)
+                    return LC_FileResult.FileNotOpened;
 
                 byte[] buff = new byte[bytesToRead];
-                *bytesReaded = (uint)fs.Read(buff, 0, (int)bytesToRead);
-                ums.Write(buff, 0, (int)*bytesReaded);
-            });
-
-            return res;
-        }
-
-        LC_FileResult fileWrite(IntPtr fileObject, byte* buffer, uint bytesToWrite, uint* bytesWritten)
-        {
-            var res = FileOpHelper.CallFileGetResult(() =>
-            {
-                int key = fileObject.ToInt32();
-                FileStream fs = files[key];
-                var ums = new UnmanagedMemoryStream(buffer, bytesToWrite);
-                long pos = fs.Position;
-                ums.CopyTo(fs);
-                *bytesWritten = bytesToWrite;
-            });
-            return res;
-        }
-
-        LC_FileResult fileClose(IntPtr fileObject)
-        {
-            var res = FileOpHelper.CallFileGetResult(() =>
-            {
-                int key = fileObject.ToInt32();
-                FileStream fs = files[key];
-                fs.FlushAsync().ContinueWith((a) => { fs.Close(); });
-            });
-
-            if (res == LC_FileResult.Ok)
-            {
-                files.Remove(fileObject.ToInt32());
+                int read = fs.Read(buff, 0, (int)bytesToRead);
+                if (read > 0)
+                {
+                    Marshal.Copy(buff, 0, (IntPtr)buffer, read);
+                }
+                *bytesReaded = (uint)read;
+                return LC_FileResult.Ok;
             }
-            return res;
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LC_FileServer: FileRead exception: {ex.Message}");
+                return LC_FileResult.IntErr;
+            }
         }
 
-        uint fileSize(IntPtr fileObject)
+        private LC_FileResult FileWrite(IntPtr fileObject, byte* buffer, uint bytesToWrite, uint* bytesWritten)
         {
-            uint outp = 0;
-            var res = FileOpHelper<uint>.CallFileGetResult(() =>
+            if (bytesWritten != null)
+                *bytesWritten = 0;
+
+            if (buffer == null || bytesWritten == null)
+                return LC_FileResult.InvalidParameter;
+
+            if (bytesToWrite == 0)
+                return LC_FileResult.Ok;
+
+            try
             {
                 int key = fileObject.ToInt32();
-                FileStream fs = files[key];
-                return (uint)fs.Length;
-            }, ref outp);
-            return outp;
+                FileStream? fs;
+                lock (_filesLock)
+                {
+                    _files.TryGetValue(key, out fs);
+                }
+
+                if (fs == null)
+                    return LC_FileResult.FileNotOpened;
+
+                byte[] buff = new byte[bytesToWrite];
+                Marshal.Copy((IntPtr)buffer, buff, 0, (int)bytesToWrite);
+                fs.Write(buff, 0, (int)bytesToWrite);
+                fs.Flush();
+                *bytesWritten = bytesToWrite;
+                return LC_FileResult.Ok;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LC_FileServer: FileWrite exception: {ex.Message}");
+                return LC_FileResult.IntErr;
+            }
         }
 
-        LC_FileResult fileTruncate(IntPtr fileObject)
+        private LC_FileResult FileClose(IntPtr fileObject)
         {
-            var res = FileOpHelper.CallFileGetResult(() =>
+            try
             {
                 int key = fileObject.ToInt32();
-                FileStream fs = files[key];
+                FileStream? fs;
+                lock (_filesLock)
+                {
+                    if (_files.TryGetValue(key, out fs))
+                    {
+                        _files.Remove(key);
+                    }
+                }
+
+                if (fs == null)
+                    return LC_FileResult.FileNotOpened;
+
+                fs.Flush();
+                fs.Dispose();
+                return LC_FileResult.Ok;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LC_FileServer: FileClose exception: {ex.Message}");
+                return LC_FileResult.IntErr;
+            }
+        }
+
+        private uint FileSize(IntPtr fileObject)
+        {
+            try
+            {
+                int key = fileObject.ToInt32();
+                lock (_filesLock)
+                {
+                    if (_files.TryGetValue(key, out var fs))
+                        return (uint)fs.Length;
+                }
+            }
+            catch { }
+            return 0;
+        }
+
+        private LC_FileResult FileTruncate(IntPtr fileObject)
+        {
+            try
+            {
+                int key = fileObject.ToInt32();
+                FileStream? fs;
+                lock (_filesLock)
+                {
+                    _files.TryGetValue(key, out fs);
+                }
+
+                if (fs == null)
+                    return LC_FileResult.FileNotOpened;
+
                 fs.SetLength(fs.Position);
-            });
-            return res;
+                return LC_FileResult.Ok;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LC_FileServer: FileTruncate exception: {ex.Message}");
+                return LC_FileResult.IntErr;
+            }
         }
 
-        void fileOnReceive()
+        private void FileOnReceive()
         {
-            mutex.Release();
+            try
+            {
+                if (_mutex.CurrentCount == 0)
+                    _mutex.Release();
+            }
+            catch { }
         }
 
         private void FileServerThread()
         {
             var watch = new Stopwatch();
-
             watch.Start();
-            while (true)
+
+            while (_running)
             {
-                mutex.Wait(100);
-                watch.Stop();
-                uint elaps = (uint)watch.ElapsedMilliseconds;
-                watch.Restart();
-                lib_FileServer(_node.DescriptorPtr, elaps);
+                try
+                {
+                    _mutex.Wait(100);
+                    watch.Stop();
+                    uint elaps = (uint)watch.ElapsedMilliseconds;
+                    watch.Restart();
+
+                    if (_node != null && _node.DescriptorPtr != IntPtr.Zero)
+                    {
+                        lib_FileServer(_node.DescriptorPtr, elaps);
+                    }
+                }
+                catch (ThreadAbortException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"LC_FileServer: FileServerThread error: {ex.Message}");
+                }
             }
         }
-    }
 
-    class FileOpHelper<TResult>
-    {
-        public static LC_FileResult CallFileGetResult(Func<TResult> func, ref TResult output)
+        #endregion
+
+        public void Dispose()
         {
-            var res = LC_FileResult.Ok;
+            _running = false;
             try
             {
-                output = func();
+                _mutex.Release();
             }
-            catch (FileNotFoundException)
-            {
-                res = LC_FileResult.NoFile;
-            }
-            catch (System.Security.SecurityException)
-            {
-                res = LC_FileResult.Denied;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                res = LC_FileResult.NoPath;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                res = LC_FileResult.Denied;
-            }
-            catch (PathTooLongException)
-            {
-                res = LC_FileResult.InvalidName;
-            }
-            catch (IOException)
-            {
-                res = LC_FileResult.IntErr;
-            }
-            catch (NotSupportedException)
-            {
-                res = LC_FileResult.IntErr;
-            }
-            catch (ObjectDisposedException)
-            {
-                res = LC_FileResult.FileNotOpened;
-            }
-            catch (KeyNotFoundException)
-            {
-                res = LC_FileResult.FileNotOpened;
-            }
-            catch
-            {
-                res = LC_FileResult.IntErr;
-            }
-            return res;
-        }
-    }
+            catch { }
 
-    class FileOpHelper
-    {
-        public static LC_FileResult CallFileGetResult(Action func)
-        {
-            var res = LC_FileResult.Ok;
-            try
+            lock (_filesLock)
             {
-                func();
+                foreach (var fs in _files.Values)
+                {
+                    try
+                    {
+                        fs.Flush();
+                        fs.Dispose();
+                    }
+                    catch { }
+                }
+                _files.Clear();
             }
-            catch (FileNotFoundException)
+
+            lock (s_callbacksLock)
             {
-                res = LC_FileResult.NoFile;
+                if (s_activeServer == this)
+                {
+                    s_activeServer = null;
+                }
             }
-            catch (System.Security.SecurityException)
-            {
-                res = LC_FileResult.Denied;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                res = LC_FileResult.NoPath;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                res = LC_FileResult.Denied;
-            }
-            catch (PathTooLongException)
-            {
-                res = LC_FileResult.InvalidName;
-            }
-            catch (IOException)
-            {
-                res = LC_FileResult.IntErr;
-            }
-            catch (NotSupportedException)
-            {
-                res = LC_FileResult.IntErr;
-            }
-            catch (ObjectDisposedException)
-            {
-                res = LC_FileResult.FileNotOpened;
-            }
-            catch (KeyNotFoundException)
-            {
-                res = LC_FileResult.FileNotOpened;
-            }
-            catch
-            {
-                res = LC_FileResult.IntErr;
-            }
-            return res;
         }
     }
 }
