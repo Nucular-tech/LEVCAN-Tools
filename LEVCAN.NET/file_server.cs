@@ -175,6 +175,7 @@ namespace LEVCAN
             updates.Start();
         }
 
+        [System.Diagnostics.Conditional("DEBUG")]
         private static void Log(string msg)
         {
             try
